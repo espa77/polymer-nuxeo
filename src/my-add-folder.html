@@ -1,0 +1,41 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-add-folder">
+
+    <template>
+
+        <style include="shared-styles">
+            :host {
+                display: block;
+                padding: 10px;
+            }
+        </style>
+
+        <div class="card">
+            <div class="title">Add Folder</div>
+            <nuxeo-resource auto path="/user/search" params='{"q": "*"}' response="{{users}}"></nuxeo-resource>
+            <paper-material elevation="1">
+                <h2 class="page-title">Users</h2>
+                <ul>
+                    <!-- loop over users.entries and print each user's id -->
+                    <template is="dom-repeat" items="{{users.entries}}" as="user">
+                        <li>{{user.id}}</li>
+                    </template>
+                </ul>
+            </paper-material>
+        </div>
+
+    </template>
+
+    <script>
+
+        Polymer({
+
+            is: 'my-add-folder'
+
+        });
+
+    </script>
+
+</dom-module>

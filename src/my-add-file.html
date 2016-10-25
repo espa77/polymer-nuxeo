@@ -1,0 +1,98 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../bower_components/iron-input/iron-input.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/neon-animation/animations/scale-down-animation.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-add-file">
+
+    <template>
+
+        <style include="shared-styles">
+            :host {
+                display: block;
+                padding: 10px;
+            }
+            paper-button.add-new {
+                margin: 2ch;
+            }
+        </style>
+
+        <div class="card">
+            <div class="title">New File</div>
+            <nuxeo-resource id="nuxeo" auto path="path/default-domain/UserWorkspaces/esteiner" on-response="{{_handleResponse}}"></nuxeo-resource>
+            <form is="iron-form" id="form" action="" content-type="application/json">
+                <h3>Entity Type: Document</h3>
+                <h3>Type: File</h3>
+                <label>File Name:</label>
+                <input name="name" type="text" required>
+
+                <paper-button class="add-new" raised on-tap="openProps">ADD PROPERTIES</paper-button>
+                <paper-button class="add-new" raised on-tap="submitFileForm">CREATE</paper-button>
+                <div id="properties">
+                <template is="dom-if" if="{{showProperties}}">
+                    <label>Title:</label>
+                    <input name="title" type="text">
+                    <label>Description:</label>
+                    <input name="description" type="text">
+                </template>
+                </div>
+            </form>
+
+
+        </div>
+
+    </template>
+
+    <script>
+
+        Polymer({
+
+            is: 'my-add-file',
+
+            showProperties: false,
+
+            openProps: function() {
+                this.set('showProperties', true);
+            },
+            submitFileForm() {
+                var urlStub = this.$.form.name.value;
+                if (this.$.form.title.value && this.$.form.description.value) {
+                    var data = {
+                        "entity-type": "document",
+                        "type": "File",
+                        "name": urlStub,
+                        "properties": {
+                            "dc:title": this.$.form.title.value,
+                            "dc:description": this.$.form.description.value
+                        }
+                    }
+                } else {
+                    var data = {
+                        "entity-type": "document",
+                        "type": "File",
+                        "name": this.$.form.name.value
+                    }
+                };
+               
+                this.$.nuxeo.post(data);
+
+            },
+            _handleResponse: function(response) {
+                if (response.available) {
+                    alert(response.responseText)
+                } else {
+                    alert('there was a problem communicating with the server - please try again')
+                }
+            }
+        });
+
+    </script>
+
+</dom-module>
+
+<script>
+
+</script>

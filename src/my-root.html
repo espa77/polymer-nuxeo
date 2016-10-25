@@ -1,0 +1,138 @@
+
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/sc-timeago/sc-timeago.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="../bower_components/iron-input/iron-input.html">
+<link rel="import" href="../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="shared-styles.html">
+
+<dom-module id="my-root">
+
+    <template>
+
+        <style include="shared-styles">
+            :host {
+                display: block;
+                padding: 10px;
+            }
+            .card {
+                display: flex;
+                width: 90%;
+                margin: 0 auto;
+                border-radius: 5px;
+            }
+            .card-header {
+                align-self: center;
+                font-size: 36px;
+                font-weight: 700;
+            }
+            .inner-card {
+                display: flex;
+                flex-direction: column;
+                width: 50%;
+                padding: 16px;
+                border-radius: 5px;
+            }
+            .page-title {
+                text-align: center;
+                font-size: 30px;
+                font-weight: 100;
+            }
+            .flex-row {
+                display: flex;
+                justify-content: space-around;
+            }
+            .create-new-content {
+                display: flex;
+                align-self:center;
+            }
+            .title {
+                font-weight: 500;
+            }
+            .contents-list ol {
+                -webkit-padding-start: 0;
+            }
+            .date-created ul {
+                -webkit-padding-start: 0;
+                list-style: none;
+            }
+            paper-dialog {
+                padding-top: 2em;
+            }
+            paper-dialog a {
+                text-decoration: none;
+                color: #757575;
+            }
+        </style>
+
+        <paper-card class="card" image="/images/folder-icon.png" alt="folder image" >
+            <div class="card-header">Root Folder</div>
+            <nuxeo-resource auto path="path/default-domain/UserWorkspaces/esteiner/@children" response="{{docs}}"></nuxeo-resource>
+            <paper-material class="inner-card" elevation="1">
+                <h2 class="page-title">Contents</h2>
+                <div class="flex-row">
+                    <div class="contents-list">
+                        <h3>Folders</h3>
+                        <ol>
+                            <template is="dom-repeat" items="{{docs.entries}}" >
+                                <li class="root-contents"><span class="title">{{item.title}}</span></li>
+                            </template>
+                        </ol>
+                    </div>
+                    <div class="date-created">
+                        <h3>Creation Date</h3>
+                        <ul>
+                            <template is="dom-repeat" items="{{docs.entries}}" >
+                                <li class="dates"><sc-timeago datetime="{{item.properties.dc:created}}"></sc-timeago></li>
+                            </template>
+                        </ul>
+                    </div>
+                    <div class="create-new-content">
+                        <paper-button raised toggles class="new" on-tap="openContentAdder">ADD CONTENT</paper-button>
+                    </div>
+                </div>
+            </paper-material>
+        </paper-card>
+        <!--MODAL-->
+
+        <paper-dialog id="contentAdder"
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+
+            <template is="dom-if" if="{{showDocumentUploader}}">
+                <a href="/add-folder">
+                    <paper-button raised noink class="new">ADD FOLDER</paper-button>
+                </a>
+                <a href="/add-file">
+                    <paper-button raised noink class="new">ADD FILE</paper-button>
+                </a>
+            </template>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+            </div>
+        </paper-dialog>
+
+    </template>
+
+    <script>
+
+        Polymer({
+
+            is: 'my-root',
+
+            showDocumentUploader: false,
+
+            openContentAdder: function() {
+                this.set('showDocumentUploader', true);
+                this.$.contentAdder.open();
+            }
+        });
+
+    </script>
+
+</dom-module>
