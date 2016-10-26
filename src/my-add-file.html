@@ -2,7 +2,9 @@
 <link rel="import" href="../bower_components/iron-form/iron-form.html">
 <link rel="import" href="../bower_components/iron-input/iron-input.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
-<link rel="import" href="../bower_components/neon-animation/animations/scale-down-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="shared-styles.html">
 
@@ -40,9 +42,22 @@
                 </template>
                 </div>
             </form>
-
-
         </div>
+        <paper-dialog id="contentSuccess"
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+
+            <template is="dom-if" if="{{showResponse}}">
+                <h2>Your File Has Been Uploaded</h2>
+                <a href="/root">
+                    <paper-button raised noink class="new">VIEW FOLDER</paper-button>
+                </a>
+                <paper-button raised noink class="new" on-tap="addNewFile">ADD NEW FILE</paper-button>
+            </template>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+            </div>
+        </paper-dialog>
 
     </template>
 
@@ -54,38 +69,50 @@
 
             showProperties: false,
 
+            showResponse: false,
+
             openProps: function() {
                 this.set('showProperties', true);
             },
             submitFileForm() {
-                var urlStub = this.$.form.name.value;
-                if (this.$.form.title.value && this.$.form.description.value) {
-                    var data = {
-                        "entity-type": "document",
-                        "type": "File",
-                        "name": urlStub,
-                        "properties": {
-                            "dc:title": this.$.form.title.value,
-                            "dc:description": this.$.form.description.value
+                if (this.$.form.name.value) {
+                    var urlStub = this.$.form.name.value,
+                            data = {
+                                "entity-type": "document",
+                                "type": "File"
+                            };
+                    if (this.$.form.title.value || this.$.form.description.value) {
+                        data = {
+                            "name": urlStub,
+                            "properties": {
+                                "dc:title": this.$.form.title.value,
+                                "dc:description": this.$.form.description.value
+                            }
+                        }
+                    } else {
+                        data = {
+                            "name": this.$.form.name.value
                         }
                     }
                 } else {
-                    var data = {
-                        "entity-type": "document",
-                        "type": "File",
-                        "name": this.$.form.name.value
-                    }
-                };
+                    alert("please provide a name for this new file");
+                    return false;
+                }
                 data = JSON.stringify(data);
                 this.$.nuxeo.setAttribute("data", data);
                 this.$.nuxeo.post();
             },
-            handleResponse: function() {
-                if (response.available) {
-                    alert(response.responseText)
+            handleResponse: function(success) {
+                this.$.form.reset();
+                this.$.nuxeo.removeAttribute("data");
+                if (success.returnValue === true) {
+                    this.set('showResponse', true);
                 } else {
-                    console.log('there was a problem communicating with the server - please try again');
+                    alert("there was a problem creating your new file");
                 }
+            },
+            addNewFile() {
+                this.set('showResponse', false)
             }
         });
 
