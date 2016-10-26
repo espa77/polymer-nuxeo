@@ -23,37 +23,52 @@
         </style>
 
         <div class="card">
-            <div class="title" id="fileUpload">New File</div>
+            <div class="title">New File</div>
             <nuxeo-resource id="nuxeo" contentType="application/json" path="path/default-domain/UserWorkspaces/esteiner" on-response="handleResponse"></nuxeo-resource>
             <form is="iron-form" id="form" action="" content-type="application/json">
-                <h2>Upload a New File to Nuxeo</h2>
                 <h3>Entity Type: Document</h3>
                 <h3>Type: File</h3>
                 <label>File Name:</label>
                 <input name="name" type="text" required>
-                <div id="fileButtons">
+
                 <paper-button class="add-new" raised on-tap="openProps">ADD PROPERTIES</paper-button>
                 <paper-button class="add-new" raised on-tap="submitFileForm">CREATE</paper-button>
-                </div>
                 <div id="properties">
-                <template is="dom-if" if="[[showProperties]]">
-                    <label>Title:</label>
-                    <input name="title" type="text">
-                    <label>Description:</label>
-                    <input name="description" type="text">
-                </template>
+                    <template is="dom-if" if="{{showProperties}}">
+                        <label>Title:</label>
+                        <input name="title" type="text">
+                        <label>Description:</label>
+                        <input name="description" type="text">
+                    </template>
                 </div>
             </form>
-            <div id="success">
-                <template is="dom-if" if="[[showResponse]]">
-                    <h2>Your File Has Been Uploaded</h2>
-                    <a href="/root">
-                        <paper-button raised noink class="new">VIEW FOLDER</paper-button>
-                    </a>
-                    <paper-button raised noink class="new" on-tap="addNewFile">ADD NEW FILE</paper-button>
-                </template>
-            </div>
         </div>
+
+        <div id="success" style="display: none;">
+            <h2>Your File Has Been Uploaded</h2>
+            <a href="/root">
+                <paper-button raised noink class="new">VIEW FOLDER</paper-button>
+            </a>
+            <paper-button raised noink class="new" on-tap="addNewFile">ADD NEW FILE</paper-button>
+        </div>
+
+
+        <paper-dialog id="contentSuccess"
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+
+            <template is="dom-if" if="{{showResponse}}">
+                <h2>Your File Has Been Uploaded</h2>
+                <a href="/root">
+                    <paper-button raised noink class="new">VIEW FOLDER</paper-button>
+                </a>
+                <paper-button raised noink class="new" on-tap="addNewFile">ADD NEW FILE</paper-button>
+            </template>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+            </div>
+        </paper-dialog>
+
     </template>
 
     <script>
@@ -62,60 +77,45 @@
 
             is: 'my-add-file',
 
-            properties: {
+            showProperties: false,
 
-                showProperties: {
-                    type: Boolean,
-                    value: false,
-                },
-                showResponse: {
-                    type: Boolean,
-                    value: false,
-                }
-            },
+            showResponse: false,
 
             openProps: function() {
                 this.set('showProperties', true);
             },
-            submitFileForm: function() {
+            submitFileForm() {
+                var data = {};
                 if (this.$.form.name.value) {
-
-                    var form = this.$.form,
-                        nuxeoData = {
-                            "entity-type": "document",
-                            "name": form.name.value,
-                            "properties": {},
-                            "type": "File"
-                            };
-                    if (form.title) {
-                        nuxeoData.properties["dc:title"] = form.title.value;
-                        }
-                    if (form.description) {
-                        nuxeoData.properties["dc:description"] = form.description.value;
-                        }
-                    } else {
+                    var form = this.$.form;
+                    var name = form.name.value;
+                    data["entity-type"] = "document";
+                    data["type"] = "File";
+                    data.name = name;
+                    if (form.title.value && form.description.value) {
+                        data.properties["dc:title"] = form.title.value;
+                        data.properties["dc:description"] = form.description.value;
+                    }
+                } else {
                     alert("please provide a name for this new file");
                     return false;
                 }
-                nuxeoData = JSON.stringify(nuxeoData);
-                this.$.nuxeo.setAttribute("data", nuxeoData);
+                debugger;
+                data = JSON.stringify(data);
+                this.$.nuxeo.setAttribute("data", data);
                 this.$.nuxeo.post();
             },
             handleResponse: function(success) {
                 this.$.form.reset();
                 this.$.nuxeo.removeAttribute("data");
                 if (success.returnValue === true) {
-                    this.set('showProperties', false);
                     this.set('showResponse', true);
-                    return true;
                 } else {
                     alert("there was a problem creating your new file");
-                    return false;
                 }
             },
             addNewFile() {
-                this.set('showResonse', false);
-                return true;
+                this.set('showResponse', false)
             }
         });
 
