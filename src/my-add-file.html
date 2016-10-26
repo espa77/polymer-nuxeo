@@ -22,7 +22,7 @@
 
         <div class="card">
             <div class="title">New File</div>
-            <nuxeo-resource id="nuxeo" auto path="path/default-domain/UserWorkspaces/esteiner" on-response="{{_handleResponse}}"></nuxeo-resource>
+            <nuxeo-resource id="nuxeo" contentType="application/json" path="path/default-domain/UserWorkspaces/esteiner" on-response="handleResponse"></nuxeo-resource>
             <form is="iron-form" id="form" action="" content-type="application/json">
                 <h3>Entity Type: Document</h3>
                 <h3>Type: File</h3>
@@ -76,15 +76,15 @@
                         "name": this.$.form.name.value
                     }
                 };
-
-                this.$.nuxeo.post(data);
-
+                data = JSON.stringify(data);
+                this.$.nuxeo.setAttribute("data", data);
+                this.$.nuxeo.post();
             },
-            _handleResponse: function(response) {
+            handleResponse: function() {
                 if (response.available) {
                     alert(response.responseText)
                 } else {
-                    alert('there was a problem communicating with the server - please try again')
+                    console.log('there was a problem communicating with the server - please try again');
                 }
             }
         });
