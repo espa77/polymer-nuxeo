@@ -2,10 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="32c30179-5bc3-47d2-845a-b05304681cf2" name="Default" comment="">
-      <change type="DELETED" beforePath="$PROJECT_DIR$/src/my-add-file2.html" afterPath="" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/my-add-file.html" afterPath="$PROJECT_DIR$/src/my-add-file.html" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/my-add-folder.html" afterPath="$PROJECT_DIR$/src/my-add-folder.html" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/my-root.html" afterPath="$PROJECT_DIR$/src/my-root.html" />
     </list>
     <ignored path="polymer-nuxeo.iws" />
     <ignored path=".idea/workspace.xml" />
@@ -27,7 +24,7 @@
     <favorites_list name="polymer-nuxeo" />
   </component>
   <component name="FileEditorManager">
-    <splitter split-orientation="horizontal" split-proportion="0.5">
+    <splitter split-orientation="horizontal" split-proportion="0.30636606">
       <split-first>
         <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
           <file leaf-file-name="index.html" pinned="false" current-in-tab="false">
@@ -63,8 +60,8 @@
           <file leaf-file-name="my-add-file.html" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/src/my-add-file.html">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="305">
-                  <caret line="83" column="25" selection-start-line="83" selection-start-column="25" selection-end-line="83" selection-end-column="25" />
+                <state relative-caret-position="371">
+                  <caret line="86" column="25" selection-start-line="86" selection-start-column="25" selection-end-line="86" selection-end-column="25" />
                   <folding>
                     <element signature="n#style#0;n#div#1;n#div#0;n#template#0;n#dom-module#0;n#!!top" expanded="true" />
                   </folding>
@@ -112,20 +109,20 @@
       </split-first>
       <split-second>
         <leaf>
-          <file leaf-file-name="my-root.html" pinned="false" current-in-tab="false">
+          <file leaf-file-name="my-root.html" pinned="false" current-in-tab="true">
             <entry file="file://$PROJECT_DIR$/src/my-root.html">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="1012">
-                  <caret line="46" column="30" selection-start-line="46" selection-start-column="30" selection-end-line="46" selection-end-column="30" />
+                <state relative-caret-position="1031">
+                  <caret line="136" column="41" selection-start-line="136" selection-start-column="41" selection-end-line="136" selection-end-column="41" />
                   <folding />
                 </state>
               </provider>
             </entry>
           </file>
-          <file leaf-file-name="my-add-folder.html" pinned="false" current-in-tab="true">
+          <file leaf-file-name="my-add-folder.html" pinned="false" current-in-tab="false">
             <entry file="file://$PROJECT_DIR$/src/my-add-folder.html">
               <provider selected="true" editor-type-id="text-editor">
-                <state relative-caret-position="-69">
+                <state relative-caret-position="-377">
                   <caret line="47" column="31" selection-start-line="47" selection-start-column="31" selection-end-line="47" selection-end-column="31" />
                   <folding>
                     <element signature="n#style#0;n#div#1;n#div#0;n#template#0;n#dom-module#0;n#!!top" expanded="true" />
@@ -159,7 +156,6 @@
         <option value="$PROJECT_DIR$/src/my-add-folder-view.html" />
         <option value="$PROJECT_DIR$/polymer.json" />
         <option value="$PROJECT_DIR$/bower.json" />
-        <option value="$PROJECT_DIR$/src/my-root.html" />
         <option value="$PROJECT_DIR$/src/shared-styles.html" />
         <option value="$PROJECT_DIR$/index.html" />
         <option value="$PROJECT_DIR$/.gitignore" />
@@ -169,6 +165,7 @@
         <option value="$PROJECT_DIR$/src/handle-success.html" />
         <option value="$PROJECT_DIR$/src/my-add-file.html" />
         <option value="$PROJECT_DIR$/src/my-add-folder.html" />
+        <option value="$PROJECT_DIR$/src/my-root.html" />
       </list>
     </option>
   </component>
@@ -467,12 +464,12 @@
       <updated>1477279703189</updated>
       <workItem from="1477279708074" duration="40055000" />
       <workItem from="1477422251114" duration="8187000" />
-      <workItem from="1477487783630" duration="18838000" />
+      <workItem from="1477487783630" duration="20072000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="67080000" />
+    <option name="totallyTimeSpent" value="68314000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-2555" y="-1024" width="2491" height="1380" extended-state="0" />
@@ -834,14 +831,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/my-root.html">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="1012">
-          <caret line="46" column="30" selection-start-line="46" selection-start-column="30" selection-end-line="46" selection-end-column="30" />
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/index.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1031">
@@ -850,23 +839,31 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/my-add-file.html">
+    <entry file="file://$PROJECT_DIR$/src/my-add-folder.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="305">
-          <caret line="83" column="25" selection-start-line="83" selection-start-column="25" selection-end-line="83" selection-end-column="25" />
+        <state relative-caret-position="-377">
+          <caret line="47" column="31" selection-start-line="47" selection-start-column="31" selection-end-line="47" selection-end-column="31" />
           <folding>
             <element signature="n#style#0;n#div#1;n#div#0;n#template#0;n#dom-module#0;n#!!top" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/my-add-folder.html">
+    <entry file="file://$PROJECT_DIR$/src/my-add-file.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-69">
-          <caret line="47" column="31" selection-start-line="47" selection-start-column="31" selection-end-line="47" selection-end-column="31" />
+        <state relative-caret-position="371">
+          <caret line="86" column="25" selection-start-line="86" selection-start-column="25" selection-end-line="86" selection-end-column="25" />
           <folding>
             <element signature="n#style#0;n#div#1;n#div#0;n#template#0;n#dom-module#0;n#!!top" expanded="true" />
           </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/my-root.html">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="1031">
+          <caret line="136" column="41" selection-start-line="136" selection-start-column="41" selection-end-line="136" selection-end-column="41" />
+          <folding />
         </state>
       </provider>
     </entry>

@@ -79,7 +79,8 @@
                     <div class="contents-list">
                         <h3>Folders</h3>
                         <ol>
-                            <template is="dom-repeat" items="{{docs.entries}}" >
+                            <template is="dom-repeat" items="{{docs.entries}}"
+                                filter="isFolder" observe="facets">
                                 <li class="root-contents"><span class="title">{{item.title}}</span></li>
                             </template>
                         </ol>
@@ -87,7 +88,8 @@
                     <div class="date-created">
                         <h3>Creation Date</h3>
                         <ul>
-                            <template is="dom-repeat" items="{{docs.entries}}" >
+                            <template is="dom-repeat" items="{{docs.entries}}"
+                                      filter="isFolder" observe="facets">
                                 <li class="dates"><sc-timeago datetime="{{item.properties.dc:created}}"></sc-timeago></li>
                             </template>
                         </ul>
@@ -130,6 +132,10 @@
             openContentAdder: function() {
                 this.set('showDocumentUploader', true);
                 this.$.contentAdder.open();
+            },
+
+            isFolder: function(entries) {
+                return entries.facets.includes("Folderish");
             }
         });
 
