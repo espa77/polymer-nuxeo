@@ -1,4 +1,11 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../bower_components/iron-input/iron-input.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-add-folder">
@@ -10,20 +17,40 @@
                 display: block;
                 padding: 10px;
             }
+            paper-button.add-new {
+                margin: 2ch;
+            }
         </style>
 
         <div class="card">
-            <div class="title">Add Folder</div>
-            <nuxeo-resource auto path="/user/search" params='{"q": "*"}' response="{{users}}"></nuxeo-resource>
-            <paper-material elevation="1">
-                <h2 class="page-title">Users</h2>
-                <ul>
-                    <!-- loop over users.entries and print each user's id -->
-                    <template is="dom-repeat" items="{{users.entries}}" as="user">
-                        <li>{{user.id}}</li>
+            <div class="title" id="fileUpload">New File</div>
+            <nuxeo-resource id="nuxeo" contentType="application/json" path="path/default-domain/UserWorkspaces/esteiner" on-response="handleResponse"></nuxeo-resource>
+            <form is="iron-form" id="form" content-type="application/json">
+                <h2>Upload a New Folder to Nuxeo</h2>
+                <h3>Entity Type: Document</h3>
+                <h3>Type: Folder</h3>
+                <label>Folder Name:</label>
+                <input name="name" type="text">
+                <div id="folderButtons">
+                    <paper-button class="add-new" raised on-tap="openProps">ADD PROPERTIES</paper-button>
+                    <paper-button class="add-new" raised on-tap="submitFileForm">CREATE</paper-button>
+                </div>
+                <div id="properties">
+                    <template is="dom-if" if="[[showProperties]]">
+                        <label>Title:</label>
+                        <input name="title" type="text">
+                        <label>Description:</label>
+                        <input name="description" type="text">
                     </template>
-                </ul>
-            </paper-material>
+                </div>
+            </form>
+            <div id="successMsg" style="display: none;">
+                <h2>Your Folder Has Been Uploaded</h2>
+                <a href="/root">
+                    <paper-button raised noink class="new">VIEW FOLDER</paper-button>
+                </a>
+                <paper-button raised noink class="new" on-tap="addNewFolder">ADD NEW FOLDER</paper-button>
+            </div>
         </div>
 
     </template>
@@ -32,7 +59,57 @@
 
         Polymer({
 
-            is: 'my-add-folder'
+            is: 'my-add-folder',
+
+            properties: {
+                showProperties: {
+                    type: Boolean,
+                    value: false,
+                }
+            },
+            openProps: function() {
+                this.set('showProperties', true);
+            },
+            submitFileForm: function() {
+                if (this.$.form.name.value) {
+
+                    var form = this.$.form,
+                            nuxeoData = {
+                                "entity-type": "document",
+                                "name": form.name.value,
+                                "properties": {},
+                                "type": "Folder"
+                            };
+                    if (form.title) {
+                        nuxeoData.properties["dc:title"] = form.title.value;
+                    }
+                    if (form.description) {
+                        nuxeoData.properties["dc:description"] = form.description.value;
+                    }
+                } else {
+                    alert("please provide a name for this new folder");
+                    return false;
+                }
+                nuxeoData = JSON.stringify(nuxeoData);
+                this.$.nuxeo.setAttribute("data", nuxeoData);
+                debugger;
+                this.$.nuxeo.post();
+            },
+            handleResponse: function(success) {
+                this.$.form.reset();
+                this.$.nuxeo.removeAttribute("data");
+                if (success.returnValue === true) {
+                    this.set('showProperties', false);
+                    this.$.successMsg.style.display = "flex";
+                    return true;
+                } else {
+                    alert("there was a problem creating your new folder");
+                    return false;
+                }
+            },
+            addNewFolder() {
+                this.$.successMsg.style.display = "none";
+            }
 
         });
 

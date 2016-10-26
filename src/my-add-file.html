@@ -44,14 +44,12 @@
                 </template>
                 </div>
             </form>
-            <div id="success">
-                <template is="dom-if" if="[[showResponse]]">
-                    <h2>Your File Has Been Uploaded</h2>
-                    <a href="/root">
-                        <paper-button raised noink class="new">VIEW FOLDER</paper-button>
-                    </a>
-                    <paper-button raised noink class="new" on-tap="addNewFile">ADD NEW FILE</paper-button>
-                </template>
+            <div id="successMsg" style="display: none;">
+                <h2>Your File Has Been Uploaded</h2>
+                <a href="/root">
+                    <paper-button raised noink class="new">VIEW FOLDER</paper-button>
+                </a>
+                <paper-button raised noink class="new" on-tap="addNewFile">ADD NEW FILE</paper-button>
             </div>
         </div>
     </template>
@@ -63,17 +61,11 @@
             is: 'my-add-file',
 
             properties: {
-
                 showProperties: {
-                    type: Boolean,
-                    value: false,
-                },
-                showResponse: {
                     type: Boolean,
                     value: false,
                 }
             },
-
             openProps: function() {
                 this.set('showProperties', true);
             },
@@ -106,7 +98,7 @@
                 this.$.nuxeo.removeAttribute("data");
                 if (success.returnValue === true) {
                     this.set('showProperties', false);
-                    this.set('showResponse', true);
+                    this.$.successMsg.style.display = "flex";
                     return true;
                 } else {
                     alert("there was a problem creating your new file");
@@ -114,8 +106,7 @@
                 }
             },
             addNewFile() {
-                this.set('showResonse', false);
-                return true;
+                this.$.successMsg.style.display = "none";
             }
         });
 
