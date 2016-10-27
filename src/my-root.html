@@ -72,21 +72,21 @@
 
         <paper-card class="card" image="/images/folder-icon.png" alt="folder image" >
             <div class="card-header">Root Folder</div>
-            <nuxeo-resource auto path="path/default-domain/UserWorkspaces/esteiner/@children" response="{{docs}}"></nuxeo-resource>
+            <nuxeo-resource auto id="nuxeo" path="path/default-domain/UserWorkspaces/esteiner/@children" response="{{docs}}"></nuxeo-resource>
             <paper-material class="inner-card" elevation="1">
                 <h2 class="page-title">Contents</h2>
                 <div class="flex-row">
                     <div class="contents-list">
                         <h3>Folders</h3>
                         <ol>
-                            <template is="dom-repeat" items="{{docs.entries}}"
+                            <template is="dom-repeat" id="repeater" items="{{docs.entries}}"
                                 filter="isFolder" observe="facets">
-                                <li class="root-contents"><span class="title">{{item.title}}</span></li>
+                                <li class="root-contents"><span class="title" id="{{item.path}}" on-tap="viewFolder">{{item.title}}</span></li>
                             </template>
                         </ol>
                     </div>
                     <div class="date-created">
-                        <h3>Creation Date</h3>
+                        <h3>Created</h3>
                         <ul>
                             <template is="dom-repeat" items="{{docs.entries}}"
                                       filter="isFolder" observe="facets">
@@ -100,8 +100,8 @@
                 </div>
             </paper-material>
         </paper-card>
+        
         <!--MODAL-->
-
         <paper-dialog id="contentAdder"
                       entry-animation="scale-up-animation"
                       exit-animation="fade-out-animation">
@@ -136,6 +136,18 @@
 
             isFolder: function(entries) {
                 return entries.facets.includes("Folderish");
+            },
+
+            viewFolder: function(e) {
+                let path = e.path["0"].id,
+                    nuxeo = this.$.nuxeo;
+                nuxeo.setAttribute('path', ("path" + path));
+                this.replaceDomRepeat();
+            },
+
+            replaceDomRepeat() {
+                this.$.repeater.removeAttribute('filter');
+                this.$.repeater.removeAttribute('observe');
             }
         });
 
