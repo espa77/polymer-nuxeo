@@ -22,7 +22,7 @@ effect can be visualized as a concentric circle with motion.
       }
       
       paper-ripple {
-        color: #4285f4;
+        color: #4A148C;
       }
     </style>
     <next-code-block></next-code-block>
