@@ -105,6 +105,9 @@
             .title {
                 font-weight: 500;
             }
+            #title {
+                text-transform: capitalize;
+            }
             paper-dialog {
                 padding-top: 2em;
             }
@@ -117,11 +120,13 @@
         <app-route
                 route="{{route}}"
                 pattern="/:view"
-                data="{{routeData}}"></app-route>
-        <nuxeo-resource auto id="data-for-route" url="{{_folderView(routeData.view)}}" on-response="handleResponse" ></nuxeo-resource>
+                data="{{routeData}}"
+                tail="{{subroute}}"
+                active="{{activeRoute}}"></app-route>
+        <nuxeo-resource auto id="data-for-route" url="{{_folderView(route)}}" on-response="handleResponse" ></nuxeo-resource>
 
         <div class="container">
-            <h1 class="folder-title">{{routeData.view}} Folder</h1>
+            <h1 class="folder-title"><span id="title"></span> Folder</h1>
             <nuxeo-resource auto id="nuxeo" path="path/default-domain/UserWorkspaces/@children" response="{{docs}}"></nuxeo-resource>
             <div class="flex">
                 <h2 class="contents-text">Contents</h2>
@@ -194,8 +199,13 @@
             isFile: function(entries) {
                 return entries.type == "File";
             },
-            _folderView() {
-                console.log('test')
+            _folderView(e) {
+                if (e.path === "") {
+                    this.$.title.innerHTML = e.prefix.substring(1);
+                } else {
+                    let n = e.path.lastIndexOf('/');
+                    this.$.title.innerHTML = e.path.substring(n + 1);
+                }
             },
 
             replaceDomRepeat() {
