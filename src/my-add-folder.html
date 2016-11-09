@@ -24,7 +24,7 @@
 
         <div class="card">
             <div class="title" id="fileUpload">New File</div>
-            <nuxeo-resource id="nuxeo" contentType="application/json" path="path/default-domain/UserWorkspaces/esteiner" on-response="handleResponse"></nuxeo-resource>
+            <nuxeo-resource id="nuxeo" contentType="application/json" path="path/default-domain/UserWorkspaces" on-response="handleResponse"></nuxeo-resource>
             <form is="iron-form" id="form" content-type="application/json">
                 <h2>Upload a New Folder to Nuxeo</h2>
                 <h3>Entity Type: Document</h3>
@@ -92,7 +92,6 @@
                 }
                 nuxeoData = JSON.stringify(nuxeoData);
                 this.$.nuxeo.setAttribute("data", nuxeoData);
-                debugger;
                 this.$.nuxeo.post();
             },
             handleResponse: function(success) {

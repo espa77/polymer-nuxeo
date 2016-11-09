@@ -114,9 +114,15 @@
             }
         </style>
 
+        <app-route
+                route="{{route}}"
+                pattern="/:view"
+                data="{{routeData}}"></app-route>
+        <nuxeo-resource auto id="data-for-route" url="{{_folderView(routeData.view)}}" on-response="handleResponse" ></nuxeo-resource>
+
         <div class="container">
-            <h1 class="folder-title">Root Folder</h1>
-            <nuxeo-resource auto id="nuxeo" path="path/default-domain/UserWorkspaces/esteiner/@children" response="{{docs}}"></nuxeo-resource>
+            <h1 class="folder-title">{{routeData.view}} Folder</h1>
+            <nuxeo-resource auto id="nuxeo" path="path/default-domain/UserWorkspaces/@children" response="{{docs}}"></nuxeo-resource>
             <div class="flex">
                 <h2 class="contents-text">Contents</h2>
                 <div class="sub-container">
@@ -187,6 +193,9 @@
 
             isFile: function(entries) {
                 return entries.type == "File";
+            },
+            _folderView() {
+                console.log('test')
             },
 
             replaceDomRepeat() {
