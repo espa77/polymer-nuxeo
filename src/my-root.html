@@ -128,8 +128,7 @@
                                   filter="isFolder" observe="facets">
                             <div class="folders title" id="{{item.path}}" on-tap="viewFolder">{{item.title}}</div>
                         </template>
-                        New Folder:
-                        (ADD FOLDER UPLOAD ELEMENT HERE)
+                        <paper-button raised toggles class="new" on-tap="openContentAdder">ADD FOLDER</paper-button>
                     </div>
                     <h3 id="file-title"><span class="sub-title">Files</span></h3>
                     <div class="file-list">
@@ -137,11 +136,24 @@
                                   filter="isFile" observe="facets">
                             <div class="files title" on-tap="viewResource">{{item.title}}</div>
                         </template>
-                        <nuxeo-file value="{{batch}}"></nuxeo-file>
+                        <nuxeo-file id="test" value="{{batch}}"></nuxeo-file>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!--MODAL-->
+        <paper-dialog id="contentAdder"
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+
+            <template is="dom-if" if="{{showDocumentUploader}}">
+                <add-folder nuxeo-data="{{data}}"></add-folder>
+            </template>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+            </div>
+        </paper-dialog>
 
     </template>
 
@@ -151,14 +163,21 @@
 
             is: 'my-root',
 
+            showDocumentUploader: false,
+
             properties: {
+                data: {
+                    type: Object,
+                    observer: '_managePath'
+                },
                 batch: {
-                    type: Object
+                    type: String
                 }
             },
 
-            batchChanged: function() {
-//                work with batchId here
+            openContentAdder: function() {
+                this.set('showDocumentUploader', true);
+                this.$.contentAdder.open();
             },
 
             isFolder: function(entries) {
@@ -180,6 +199,10 @@
 
             _computePath: function(path) {
                 return 'path/default-domain/workspaces/'+ ((path) ? path + '/':'') + '@children';
+            },
+
+            _managePath: function(data) {
+                debugger;
             }
         });
 

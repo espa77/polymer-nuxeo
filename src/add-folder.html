@@ -24,7 +24,6 @@
 
         <div class="card">
             <div class="title" id="fileUpload">New File</div>
-            <nuxeo-resource id="nuxeo" contentType="application/json" path="path/default-domain" on-response="handleResponse"></nuxeo-resource>
             <form is="iron-form" id="form" content-type="application/json">
                 <h2>Upload a New Folder to Nuxeo</h2>
                 <h3>Entity Type: Document</h3>
@@ -59,12 +58,16 @@
 
         Polymer({
 
-            is: 'my-add-folder',
+            is: 'add-folder',
 
             properties: {
                 showProperties: {
                     type: Boolean,
-                    value: false,
+                    value: false
+                },
+                nuxeoData: {
+                    type: Object,
+                    notify: true
                 }
             },
             openProps: function() {
@@ -91,8 +94,9 @@
                     return false;
                 }
                 nuxeoData = JSON.stringify(nuxeoData);
-                this.$.nuxeo.setAttribute("data", nuxeoData);
-                this.$.nuxeo.post();
+                this.set('nuxeoData', nuxeoData);
+//                this.$.nuxeo.setAttribute("data", nuxeoData);
+//                this.$.nuxeo.post();
             },
             handleResponse: function(success) {
                 this.$.form.reset();
