@@ -227,9 +227,26 @@
                 nuxeo.removeAttribute('data');
             },
             _manageFilePath: function(data) {
-                debugger;
+                let nuxeo = this.$.nuxeo,
+                        path = nuxeo.path,
+                        postPath = path.split('@')[0],
+                        nuxeoData = {
+                            "entity-type": "document",
+                            "name": "anything", //CHANGE SO USER CAN ADD MORE FIELDS
+                            "properties": {
+                                "file:content": data
+                            },
+                            "type": "File"
+                        };
+                nuxeoData = JSON.stringify(nuxeoData);
+                nuxeo.setAttribute("path", postPath);
+                nuxeo.setAttribute("data", nuxeoData);
+                nuxeo.post()
+                        .then(function(result){
+                            console.log(result);
+                            nuxeo.setAttribute('path', path);
+                        })
             }
-
         });
 
     </script>
