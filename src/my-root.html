@@ -168,11 +168,16 @@
             properties: {
                 data: {
                     type: Object,
-                    observer: '_managePath'
+                    observer: '_manageFolderPath'
                 },
                 batch: {
-                    type: String
+                    type: String,
+                    observer: '_manageFilePath'
                 }
+            },
+
+            ready: function() {
+                this.$.nuxeo.setAttribute('on-response', 'handleResponse');
             },
 
             openContentAdder: function() {
@@ -201,9 +206,30 @@
                 return 'path/default-domain/workspaces/'+ ((path) ? path + '/':'') + '@children';
             },
 
-            _managePath: function(data) {
+            _manageFolderPath: function(data) {
+                let nuxeo = this.$.nuxeo,
+                        path = nuxeo.path,
+                        postPath = path.split('@')[0];
+                nuxeo.setAttribute("data", data);
+                nuxeo.setAttribute("path", postPath);
+                nuxeo.post()
+                        .then(function(result){
+                            if(!result) {
+                                alert("there was a problem creating your new folder");
+                                return false;
+                            } else {
+                                nuxeo.setAttribute('path', path);
+                                alert("your folder has been created")
+                            }
+                        });
+                this.set('showDocumentUploader', false);
+                this.$.contentAdder.close();
+                nuxeo.removeAttribute('data');
+            },
+            _manageFilePath: function(data) {
                 debugger;
             }
+
         });
 
     </script>
