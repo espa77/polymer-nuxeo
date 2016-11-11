@@ -8,7 +8,7 @@
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="shared-styles.html">
 
-<dom-module id="my-add-folder">
+<dom-module id="add-folder">
 
     <template>
 
@@ -24,7 +24,7 @@
 
         <div class="card">
             <div class="title" id="fileUpload">New File</div>
-            <nuxeo-resource id="nuxeo" contentType="application/json" path="path/default-domain/UserWorkspaces" on-response="handleResponse"></nuxeo-resource>
+            <nuxeo-resource id="nuxeo" contentType="application/json" path="path/default-domain" on-response="handleResponse"></nuxeo-resource>
             <form is="iron-form" id="form" content-type="application/json">
                 <h2>Upload a New Folder to Nuxeo</h2>
                 <h3>Entity Type: Document</h3>
@@ -46,7 +46,7 @@
             </form>
             <div id="successMsg" style="display: none;">
                 <h2>Your Folder Has Been Uploaded</h2>
-                <a href="/root">
+                <a href="/">
                     <paper-button raised noink class="new">VIEW FOLDER</paper-button>
                 </a>
                 <paper-button raised noink class="new" on-tap="addNewFolder">ADD NEW FOLDER</paper-button>

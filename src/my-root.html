@@ -8,7 +8,10 @@
 <link rel="import" href="../bower_components/iron-input/iron-input.html">
 <link rel="import" href="../bower_components/iron-form/iron-form.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/nuxeo-elements/nuxeo-document.html">
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../bower_components/nuxeo-elements/widgets/nuxeo-file.html">
+<link rel="import" href="add-folder.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-root">
@@ -23,12 +26,16 @@
             :host {
                 display: block;
                 padding: 10px;
+                --button-text-color: #3F51B5;
+                --button-background-color: white;
+                --button-hover-text-color: #B3E5FC;
+                --button-hover-background-color: #3F51B5;
             }
             .container {
                 @apply(--layout-vertical);
-                border: 2px solid #9C27B0;
+                border: 2px solid #3F51B5;
                 border-radius: 5px;
-                background: no-repeat top center url("../images/folder-icon.png") #E1BEE7;
+                background: no-repeat top center url("../images/folder-icon.png");
             }
             .sub-container {
                 @apply(--layout-vertical);
@@ -62,7 +69,7 @@
                 width: 20%;
                 min-width: 130px;
                 text-align: center;
-                border: 1px solid #F3E5F5;
+                border: 1px solid #3F51B5;
                 border-radius: 5px;
             }
             .folders {
@@ -71,37 +78,22 @@
                 margin-top: 0.5ch;
             }
             .folders:hover, .files:hover {
-                border: 1px solid #E040FB;
-                background-color: rgba(255, 255, 255, 0.4);
+                border: 1px solid #B3E5FC;
+                background-color: rgba(255, 255, 255, 0.1);
             }
             .files {
                 padding-top: 1ch;
                 padding-bottom: 1ch;
             }
             #file-title {
-                border-top: 1px solid #E040FB;
+                border-top: 2px solid #3F51B5;
                 margin-top: 1.5ch;
                 padding-top: 0.5ch;
             }
             .title {
                 text-align: center;
             }
-            .create-new-content {
-                @apply(--layout-horizontal);
-                @apply(--layout-center-justified);
-                padding-top: 1.5ch;
-                border-top: 1px solid #E040FB;
-                margin-top: 2ch;
-            }
-            .create-new-content paper-button {
-                background-color: #E040FB;
-                color: #EEE;
-                margin-bottom: 2ch;
-                margin-top: 0.5ch;
-            }
-            .create-new-content paper-button:hover {
-                color: #111;
-            }
+
             .title {
                 font-weight: 500;
             }
@@ -123,52 +115,33 @@
                 data="{{routeData}}"
                 tail="{{subroute}}"
                 active="{{activeRoute}}"></app-route>
-        <nuxeo-resource auto id="data-for-route" url="{{_folderView(route)}}" on-response="handleResponse" ></nuxeo-resource>
 
         <div class="container">
             <h1 class="folder-title"><span id="title"></span> Folder</h1>
-            <nuxeo-resource auto id="nuxeo" path="path/default-domain/UserWorkspaces/@children" response="{{docs}}"></nuxeo-resource>
+            <nuxeo-resource auto id="nuxeo" path="{{_computePath(route.path)}}" response="{{docs}}"></nuxeo-resource>
             <div class="flex">
                 <h2 class="contents-text">Contents</h2>
                 <div class="sub-container">
                     <h3><span class="sub-title">Folders</span></h3>
                     <div class="folder-list">
                         <template is="dom-repeat" id="repeater" items="{{docs.entries}}"
-                                filter="isFolder" observe="facets">
-                            <div class="folders title" id="{{item.path}}" on-tap="viewResource">{{item.title}}</div>
+                                  filter="isFolder" observe="facets">
+                            <div class="folders title" id="{{item.path}}" on-tap="viewFolder">{{item.title}}</div>
                         </template>
+                        New Folder:
+                        (ADD FOLDER UPLOAD ELEMENT HERE)
                     </div>
                     <h3 id="file-title"><span class="sub-title">Files</span></h3>
                     <div class="file-list">
                         <template is="dom-repeat" items="{{docs.entries}}"
                                   filter="isFile" observe="facets">
-                            <div class="files title" id="{{item.path}}" on-tap="viewResource">{{item.title}}</div>
+                            <div class="files title" on-tap="viewResource">{{item.title}}</div>
                         </template>
+                        <nuxeo-file value="{{batch}}"></nuxeo-file>
                     </div>
-                </div>
-                <div class="create-new-content">
-                    <paper-button raised toggles class="new" on-tap="openContentAdder">ADD CONTENT</paper-button>
                 </div>
             </div>
         </div>
-
-        <!--MODAL-->
-        <paper-dialog id="contentAdder"
-                      entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation">
-
-            <template is="dom-if" if="{{showDocumentUploader}}">
-                <a href="/add-folder">
-                    <paper-button raised noink class="new">ADD FOLDER</paper-button>
-                </a>
-                <a href="/add-file">
-                    <paper-button raised noink class="new">ADD FILE</paper-button>
-                </a>
-            </template>
-            <div class="buttons">
-                <paper-button dialog-dismiss>Cancel</paper-button>
-            </div>
-        </paper-dialog>
 
     </template>
 
@@ -178,39 +151,35 @@
 
             is: 'my-root',
 
-            showDocumentUploader: false,
+            properties: {
+                batch: {
+                    type: Object
+                }
+            },
 
-            openContentAdder: function() {
-                this.set('showDocumentUploader', true);
-                this.$.contentAdder.open();
+            batchChanged: function() {
+//                work with batchId here
             },
 
             isFolder: function(entries) {
                 return entries.facets.includes("Folderish");
             },
 
-            viewResource: function(e) {
-                let path = e.path["0"].id,
-                    nuxeo = this.$.nuxeo;
-                nuxeo.setAttribute('path', ("path" + path));
-                this.replaceDomRepeat();
-            },
-
             isFile: function(entries) {
-                return entries.type == "File";
-            },
-            _folderView(e) {
-                if (e.path === "") {
-                    this.$.title.innerHTML = e.prefix.substring(1);
-                } else {
-                    let n = e.path.lastIndexOf('/');
-                    this.$.title.innerHTML = e.path.substring(n + 1);
-                }
+                return (!entries.facets.includes("Folderish"));
             },
 
-            replaceDomRepeat() {
-                this.$.repeater.removeAttribute('filter');
-                this.$.repeater.removeAttribute('observe');
+            viewFolder: function(e) {
+                let path = e.model.item.path.replace('/default-domain/workspaces/','');
+                this.set('route.path', path)
+            },
+
+            viewResource: function(e) {
+                console.log(e);
+            },
+
+            _computePath: function(path) {
+                return 'path/default-domain/workspaces/'+ ((path) ? path + '/':'') + '@children';
             }
         });
 

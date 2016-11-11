@@ -63,8 +63,8 @@
         route="{{route}}"
         pattern="/:view"
         data="{{routeData}}"
-        tail="{{subroute}}"
-        active="{{activeRoute}}"></app-route>
+        tail="{{subroute}}"></app-route>
+
 
     <app-drawer-layout fullbleed>
 
@@ -88,7 +88,7 @@
           </app-toolbar>
         </app-header>
 
-          <iron-pages selected="[[routeData.view]]" attr-for-selected="name" fallback-selection="root" role="main">
+          <iron-pages selected="[[routeData.view]]" attr-for-selected="name" fallback-selection="view404" role="main">
               <my-root name="root" route="{{subroute}}"></my-root>
               <my-add-file name="add-file"></my-add-file>
               <my-add-folder name="add-folder"></my-add-folder>

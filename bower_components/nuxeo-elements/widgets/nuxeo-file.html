@@ -39,6 +39,15 @@ Contributors:
   :host {
     @apply(--layout-flex);
   }
+  /*variables for button styling in host components*/
+  #button {
+    color: var(--button-text-color, black);
+    background-color: var(--button-background-color, white);
+  }
+  #button:hover {
+    color: var(--button-hover-text-color, white);
+    background-color: var(--button-hover-background-color, black);
+  }
 
   [hidden] {
     display: none;
@@ -121,7 +130,7 @@ Contributors:
       this.value = {
         "upload-batch": this.batchId,
         "upload-fileId": (this.files.length - 1).toString()
-      }
+      };
     },
 
     //XXX add support for pause / resume (NXJS-33)

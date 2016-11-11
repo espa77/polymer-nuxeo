@@ -6,6 +6,7 @@
 <link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/nuxeo-elements/widgets/nuxeo-file.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-add-file">
@@ -23,8 +24,9 @@
         </style>
 
         <div class="card">
+
             <div class="title" id="fileUpload">New File</div>
-            <nuxeo-resource id="nuxeo" contentType="application/json" path="path/default-domain/UserWorkspaces" on-response="handleResponse"></nuxeo-resource>
+            <nuxeo-resource id="nuxeo" contentType="application/json" path="path/default-domain/workspaces" on-response="handleResponse"></nuxeo-resource>
             <form is="iron-form" id="form" action="" content-type="application/json">
                 <h2>Upload a New File to Nuxeo</h2>
                 <h3>Entity Type: Document</h3>
@@ -46,7 +48,7 @@
             </form>
             <div id="successMsg" style="display: none;">
                 <h2>Your File Has Been Uploaded</h2>
-                <a href="/root">
+                <a href="/">
                     <paper-button raised noink class="new">VIEW FOLDER</paper-button>
                 </a>
                 <paper-button raised noink class="new" on-tap="addNewFile">ADD NEW FILE</paper-button>
