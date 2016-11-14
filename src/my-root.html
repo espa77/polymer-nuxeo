@@ -12,6 +12,7 @@
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../bower_components/nuxeo-elements/widgets/nuxeo-file.html">
 <link rel="import" href="add-folder.html">
+<link rel="import" href="add-file.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-root">
@@ -53,7 +54,7 @@
                 text-shadow: rgba(255,255,255,1) 1px 1px 10px;
                 padding-top: 1.8em;
             }
-            .contents-text {
+            #contents-text {
                 text-align: center;
                 font-size: 24px;
                 font-weight: 100;
@@ -69,7 +70,7 @@
                 width: 20%;
                 min-width: 130px;
                 text-align: center;
-                border: 1px solid #3F51B5;
+                border: 1px solid transparent;
                 border-radius: 5px;
             }
             .folders {
@@ -78,7 +79,7 @@
                 margin-top: 0.5ch;
             }
             .folders:hover, .files:hover {
-                border: 1px solid #B3E5FC;
+                border: 1px solid #3F51B5;
                 background-color: rgba(255, 255, 255, 0.1);
             }
             .files {
@@ -107,6 +108,14 @@
                 text-decoration: none;
                 color: #757575;
             }
+            #folderAdder, #documentAdder {
+                left: 35%;
+            }
+            @media screen and (max-width: 640px){
+                #folderAdder, #documentAdder {
+                    left: inherit;
+                }
+            }
         </style>
 
         <app-route
@@ -118,9 +127,10 @@
 
         <div class="container">
             <h1 class="folder-title"><span id="title"></span> Folder</h1>
-            <nuxeo-resource auto id="nuxeo" path="{{_computePath(route.path)}}" response="{{docs}}"></nuxeo-resource>
+            <nuxeo-resource auto id="nuxeo" path="{{_computePath(route.path)}}" response="{{docs}}" on-response="handleResponse"></nuxeo-resource>
             <div class="flex">
-                <h2 class="contents-text">Contents</h2>
+                <h2 id="contents-text">Contents</h2>
+                <h3 id="contentsNumber" style="display:none">There are {{results}} documents in this folder</h3>
                 <div class="sub-container">
                     <h3><span class="sub-title">Folders</span></h3>
                     <div class="folder-list">
@@ -128,27 +138,40 @@
                                   filter="isFolder" observe="facets">
                             <div class="folders title" id="{{item.path}}" on-tap="viewFolder">{{item.title}}</div>
                         </template>
-                        <paper-button raised toggles class="new" on-tap="openContentAdder">ADD FOLDER</paper-button>
+                        <paper-button raised toggles class="new" on-tap="openFolderAdder">ADD FOLDER</paper-button>
                     </div>
-                    <h3 id="file-title"><span class="sub-title">Files</span></h3>
+                    <h3 id="file-title"><span class="sub-title">Documents</span></h3>
                     <div class="file-list">
                         <template is="dom-repeat" items="{{docs.entries}}"
                                   filter="isFile" observe="facets">
-                            <div class="files title" on-tap="viewResource">{{item.title}}</div>
+                            <div class="files title" id={{item.uid}} on-tap="viewResource">{{item.title}}</div>
                         </template>
-                        <nuxeo-file id="test" value="{{batch}}"></nuxeo-file>
+                        <paper-button raised toggles class="new" on-tap="openDocumentAdder">ADD DOCUMENT</paper-button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!--MODAL-->
-        <paper-dialog id="contentAdder"
+        <!--FOLDER MODAL-->
+        <paper-dialog id="folderAdder"
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+
+            <template is="dom-if" if="{{showFolderUploader}}">
+                <add-folder folder-data="{{data}}"></add-folder>
+            </template>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Cancel</paper-button>
+            </div>
+        </paper-dialog>
+
+        <!--DOCUMENT MODAL-->
+        <paper-dialog id="documentAdder"
                       entry-animation="scale-up-animation"
                       exit-animation="fade-out-animation">
 
             <template is="dom-if" if="{{showDocumentUploader}}">
-                <add-folder nuxeo-data="{{data}}"></add-folder>
+                <add-file document-data="{{data}}"></add-file>
             </template>
             <div class="buttons">
                 <paper-button dialog-dismiss>Cancel</paper-button>
@@ -164,25 +187,31 @@
             is: 'my-root',
 
             showDocumentUploader: false,
+            showFolderUploader: false,
 
             properties: {
                 data: {
                     type: Object,
-                    observer: '_manageFolderPath'
+                    observer: '_manageUploadPath'
                 },
-                batch: {
+                results: {
+                    type: String
+                },
+                uid: {
                     type: String,
-                    observer: '_manageFilePath'
+                    observer: '_fileViewPath'
                 }
+
             },
 
-            ready: function() {
-                this.$.nuxeo.setAttribute('on-response', 'handleResponse');
+            openFolderAdder: function() {
+                this.set('showFolderUploader', true);
+                this.$.folderAdder.open();
             },
 
-            openContentAdder: function() {
+            openDocumentAdder: function() {
                 this.set('showDocumentUploader', true);
-                this.$.contentAdder.open();
+                this.$.documentAdder.open();
             },
 
             isFolder: function(entries) {
@@ -199,53 +228,53 @@
             },
 
             viewResource: function(e) {
-                console.log(e);
+                this.set('uid', e.model.item.uid);
+                this.$.nuxeo.setAttribute('enrichers', 'preview');
+                let path = e.model.item.path.replace('/default-domain/workspaces', '');
+                this.set('route.path', path);
             },
 
             _computePath: function(path) {
-                return 'path/default-domain/workspaces/'+ ((path) ? path + '/':'') + '@children';
+                if(this.$.nuxeo.hasAttribute('enrichers')) {
+                    return 'path/default-domain/workspaces/' + ((path) ? path + '/' : '');
+                } else {
+                    return 'path/default-domain/workspaces/' + ((path) ? path + '/' : '') + '@children';
+                }
             },
 
-            _manageFolderPath: function(data) {
+            _manageUploadPath: function(data) {
                 let nuxeo = this.$.nuxeo,
                         path = nuxeo.path,
                         postPath = path.split('@')[0];
                 nuxeo.setAttribute("data", data);
                 nuxeo.setAttribute("path", postPath);
-                nuxeo.post()
-                        .then(function(result){
-                            if(!result) {
-                                alert("there was a problem creating your new folder");
-                                return false;
-                            } else {
-                                nuxeo.setAttribute('path', path);
-                                alert("your folder has been created")
-                            }
-                        });
-                this.set('showDocumentUploader', false);
-                this.$.contentAdder.close();
+                nuxeo.post();
                 nuxeo.removeAttribute('data');
             },
-            _manageFilePath: function(data) {
-                let nuxeo = this.$.nuxeo,
-                        path = nuxeo.path,
-                        postPath = path.split('@')[0],
-                        nuxeoData = {
-                            "entity-type": "document",
-                            "name": "anything", //CHANGE SO USER CAN ADD MORE FIELDS
-                            "properties": {
-                                "file:content": data
-                            },
-                            "type": "File"
-                        };
-                nuxeoData = JSON.stringify(nuxeoData);
-                nuxeo.setAttribute("path", postPath);
-                nuxeo.setAttribute("data", nuxeoData);
-                nuxeo.post()
-                        .then(function(result){
-                            console.log(result);
-                            nuxeo.setAttribute('path', path);
-                        })
+            _fileViewPath: function(e) {
+                console.log(e);
+            },
+            handleResponse: function(success, responseObject) {
+                if(success.returnValue) {
+                    if (success.srcElement.method === "post") {
+                        if (success.detail.response.type == "Folder") {
+                            alert("your folder has been created");
+                            this.set('showFolderUploader', false);
+                            this.$.folderAdder.close();
+                        } else {
+                            alert("your document has been created");
+                            this.set('showDocumentUploader', false);
+                            this.$.documentAdder.close();
+                        }
+                    }
+                    if (success.srcElement.method === "get") {
+
+                        this.set('results', success.detail.response.resultsCount);
+                        this.$.contentsNumber.style.display = "flex";
+                    }
+                } else {
+                    alert("please check your connection to nuxeo")
+                }
             }
         });
 
