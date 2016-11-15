@@ -10,9 +10,9 @@
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
 <link rel="import" href="../bower_components/nuxeo-elements/nuxeo-document.html">
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
-<link rel="import" href="../bower_components/nuxeo-elements/widgets/nuxeo-file.html">
 <link rel="import" href="add-folder.html">
 <link rel="import" href="add-file.html">
+<link rel="import" href="file-viewer.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-root">
@@ -32,7 +32,7 @@
                 --button-hover-text-color: #B3E5FC;
                 --button-hover-background-color: #3F51B5;
             }
-            .container {
+            #container {
                 @apply(--layout-vertical);
                 border: 2px solid #3F51B5;
                 border-radius: 5px;
@@ -65,6 +65,7 @@
                 @apply(--layout-horizontal);
                 @apply(--layout-around-justified);
                 @apply(--layout-wrap);
+                padding-bottom: 1.5em;
             }
             .folders, .files {
                 width: 20%;
@@ -74,13 +75,13 @@
                 border-radius: 5px;
             }
             .folders {
-                background: no-repeat top/40% url("../images/folder-icon.png") rgba(255, 255, 255, 0.1);
+                background: no-repeat top/40% url("../images/folder-icon.png") rgba(255, 255, 255, 0.05);
                 padding-top: 5ch;
                 margin-top: 0.5ch;
             }
             .folders:hover, .files:hover {
                 border: 1px solid #3F51B5;
-                background-color: rgba(255, 255, 255, 0.1);
+                background-color: rgba(255, 255, 255, 0.05);
             }
             .files {
                 padding-top: 1ch;
@@ -88,17 +89,19 @@
             }
             #file-title {
                 border-top: 2px solid #3F51B5;
-                margin-top: 1.5ch;
                 padding-top: 0.5ch;
             }
             .title {
                 text-align: center;
-            }
-
-            .title {
                 font-weight: 500;
+                margin-bottom: 0.5em;
+                padding-bottom: 1em;
             }
-            #title {
+            .new {
+                background: #1976D2;
+                color: #efefef
+            }
+            #routeFolderTitle {
                 text-transform: capitalize;
             }
             paper-dialog {
@@ -111,9 +114,23 @@
             #folderAdder, #documentAdder {
                 left: 35%;
             }
+            #filePreview {
+                max-width: 80%;
+                position: fixed;
+                left: 45%;
+                top: 15vh;
+            }
+            #contentsNumber {
+                justify-content: center;
+                flex-direction: row;
+            }
             @media screen and (max-width: 640px){
                 #folderAdder, #documentAdder {
                     left: inherit;
+                }
+                #filePreview {
+                    max-width: 95%;
+                    left: 15vw;
                 }
             }
         </style>
@@ -125,9 +142,9 @@
                 tail="{{subroute}}"
                 active="{{activeRoute}}"></app-route>
 
-        <div class="container">
-            <h1 class="folder-title"><span id="title"></span> Folder</h1>
-            <nuxeo-resource auto id="nuxeo" path="{{_computePath(route.path)}}" response="{{docs}}" on-response="handleResponse"></nuxeo-resource>
+        <nuxeo-resource auto id="nuxeo" path="{{_computePath(route.path)}}" response="{{docs}}" on-response="handleResponse"></nuxeo-resource>
+        <div id="container">
+            <h1 class="folder-title"><span id="routeFolderTitle">{{_computeName(route.path)}}</span> Folder</h1>
             <div class="flex">
                 <h2 id="contents-text">Contents</h2>
                 <h3 id="contentsNumber" style="display:none">There are {{results}} documents in this folder</h3>
@@ -138,7 +155,7 @@
                                   filter="isFolder" observe="facets">
                             <div class="folders title" id="{{item.path}}" on-tap="viewFolder">{{item.title}}</div>
                         </template>
-                        <paper-button raised toggles class="new" on-tap="openFolderAdder">ADD FOLDER</paper-button>
+                        <paper-button raised class="new" on-tap="openFolderAdder">ADD FOLDER</paper-button>
                     </div>
                     <h3 id="file-title"><span class="sub-title">Documents</span></h3>
                     <div class="file-list">
@@ -146,7 +163,7 @@
                                   filter="isFile" observe="facets">
                             <div class="files title" id={{item.uid}} on-tap="viewResource">{{item.title}}</div>
                         </template>
-                        <paper-button raised toggles class="new" on-tap="openDocumentAdder">ADD DOCUMENT</paper-button>
+                        <paper-button raised class="new" on-tap="openDocumentAdder">ADD DOCUMENT</paper-button>
                     </div>
                 </div>
             </div>
@@ -178,6 +195,19 @@
             </div>
         </paper-dialog>
 
+        <!--FILE PREVIEW-->
+        <paper-dialog id="filePreview"
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation"
+                      on-iron-overlay-closed="_clearProps">
+            <template is="dom-if" if="{{showPreview}}">
+                <file-viewer uid="{{uid}}"></file-viewer>
+                <div class="buttons">
+                    <paper-button dialog-dismiss>Close</paper-button>
+                </div>
+            </template>
+        </paper-dialog>
+
     </template>
 
     <script>
@@ -188,6 +218,7 @@
 
             showDocumentUploader: false,
             showFolderUploader: false,
+            showPreview: false,
 
             properties: {
                 data: {
@@ -201,7 +232,60 @@
                     type: String,
                     observer: '_fileViewPath'
                 }
+            },
 
+            handleResponse: function(success, responseObject) {
+                if(success.returnValue) {
+                    if (success.srcElement.method === "post") {
+                        if (success.detail.response.type == "Folder") {
+                            alert("your folder has been created");
+                            this.set('showFolderUploader', false);
+                            this.$.folderAdder.close();
+                        } else {
+                            alert("your document has been created");
+                            this.set('showDocumentUploader', false);
+                            this.$.documentAdder.close();
+                        }
+                    }
+                    if (success.srcElement.method === "get") {
+                        let count = responseObject.response.resultsCount;
+                        if (count > 1) {
+                            this.set('results', count);
+                            this.$.contentsNumber.style.display = "flex";
+                        } else {
+                            this.$.contentsNumber.style.display = "none";
+                        }
+                    }
+                } else {
+                    alert("please check your connection to nuxeo")
+                }
+            },
+
+            filePreview: function(event, object) {
+                if (object.response.type === "Picture" || object.response.type === "File") {
+                    this.imagePreview(object);
+                }
+                if (object.response.type === "Note") {
+                    this.notePreview(object);
+                }
+            },
+
+            imagePreview: function(object) {
+                let fileData = object.response.properties["file:content"].data,
+                    mimeType = object.response.properties["file:content"]["mime-type"],
+                    fileName = object.response.properties["file:content"].name;
+                this.set('fileDataPath', fileData);
+                this.set('mimeType', mimeType);
+                this.set('fileName', fileName);
+            },
+
+            notePreview: function(object) {
+                let note = object.response.properties["note:note"],
+                    mimeType = object.response.properties["note:mime_type"],
+                    noteName = object.response.properties["dc:title"];
+                this.set('note', note);
+                this.set('mimeType', mimeType);
+                this.set('fileName', noteName);
             },
 
             openFolderAdder: function() {
@@ -228,18 +312,24 @@
             },
 
             viewResource: function(e) {
+                this.set('uid', "");
                 this.set('uid', e.model.item.uid);
-                this.$.nuxeo.setAttribute('enrichers', 'preview');
-                let path = e.model.item.path.replace('/default-domain/workspaces', '');
-                this.set('route.path', path);
+            },
+
+            _fileViewPath: function(uid) {
+                this.set('showPreview', true);
+                this.$.filePreview.open();
             },
 
             _computePath: function(path) {
-                if(this.$.nuxeo.hasAttribute('enrichers')) {
-                    return 'path/default-domain/workspaces/' + ((path) ? path + '/' : '');
-                } else {
-                    return 'path/default-domain/workspaces/' + ((path) ? path + '/' : '') + '@children';
+                return 'path/default-domain/workspaces/' + ((path) ? path + '/' : '') + '@children';
+            },
+            _computeName: function(path) {
+                if (path === "") {
+                    return "root";
                 }
+                path = path.replace('/', '');
+                return path;
             },
 
             _manageUploadPath: function(data) {
@@ -251,30 +341,16 @@
                 nuxeo.post();
                 nuxeo.removeAttribute('data');
             },
-            _fileViewPath: function(e) {
-                console.log(e);
-            },
-            handleResponse: function(success, responseObject) {
-                if(success.returnValue) {
-                    if (success.srcElement.method === "post") {
-                        if (success.detail.response.type == "Folder") {
-                            alert("your folder has been created");
-                            this.set('showFolderUploader', false);
-                            this.$.folderAdder.close();
-                        } else {
-                            alert("your document has been created");
-                            this.set('showDocumentUploader', false);
-                            this.$.documentAdder.close();
-                        }
-                    }
-                    if (success.srcElement.method === "get") {
 
-                        this.set('results', success.detail.response.resultsCount);
-                        this.$.contentsNumber.style.display = "flex";
-                    }
-                } else {
-                    alert("please check your connection to nuxeo")
-                }
+            _createEmbed: function() {
+                this.$.filecontent.src = this.fileDataPath;
+            },
+
+            _clearProps: function() {
+                this.set('fileDataPath', "");
+                this.set('mimeType', "");
+                this.set('fileName', "");
+                this.set('note', "");
             }
         });
 

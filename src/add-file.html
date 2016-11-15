@@ -6,6 +6,7 @@
 <link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../bower_components/nuxeo-elements/widgets/nuxeo-file.html">
 <link rel="import" href="shared-styles.html">
 
@@ -13,10 +14,12 @@
 
     <template>
 
-        <style include="shared-styles">
+        <style include="shared-styles iron-flex iron-flex-alignment">
             :host {
                 display: block;
-                padding: 10px;
+            }
+            #properties {
+                @apply(--layout-vertical);
             }
             paper-button.add-new {
                 margin: 2ch;
@@ -33,7 +36,6 @@
                 <div id="fileButtons">
                     <paper-button class="add-new" raised on-tap="openProps">ADD PROPERTIES</paper-button>
                     <paper-button class="add-new" raised on-tap="openFileAdd">ADD FILE(S)</paper-button>
-                    <paper-button class="add-new" raised on-tap="submitDocumentForm">CREATE</paper-button>
                 </div>
                 <div id="properties">
                     <template is="dom-if" if="[[showProperties]]">
@@ -47,6 +49,7 @@
                         <nuxeo-file id="test" value="{{batch}}" multiple></nuxeo-file>
                     </template>
                 </div>
+                <paper-button class="add-new" raised on-tap="submitDocumentForm">CREATE</paper-button>
             </form>
         </div>
     </template>
