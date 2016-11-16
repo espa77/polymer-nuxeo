@@ -1,8 +1,8 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
-<link rel="import" href="../bower_components/sc-timeago/sc-timeago.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../bower_components/neon-animation/animations/scale-up-animation.html">
 <link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
 <link rel="import" href="../bower_components/iron-input/iron-input.html">
@@ -186,7 +186,6 @@
         <paper-dialog id="documentAdder"
                       entry-animation="scale-up-animation"
                       exit-animation="fade-out-animation">
-
             <template is="dom-if" if="{{showDocumentUploader}}">
                 <add-file document-data="{{data}}"></add-file>
             </template>
@@ -195,17 +194,15 @@
             </div>
         </paper-dialog>
 
-        <!--FILE PREVIEW-->
+        <!--FILE PREVIEW MODAL-->
         <paper-dialog id="filePreview"
                       entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation"
-                      on-iron-overlay-closed="_clearProps">
-            <template is="dom-if" if="{{showPreview}}">
-                <file-viewer uid="{{uid}}"></file-viewer>
+                      exit-animation="fade-out-animation">
+
+                <file-viewer id="fileView" uid="[[uid]]" ></file-viewer>
                 <div class="buttons">
                     <paper-button dialog-dismiss>Close</paper-button>
                 </div>
-            </template>
         </paper-dialog>
 
     </template>
@@ -218,7 +215,6 @@
 
             showDocumentUploader: false,
             showFolderUploader: false,
-            showPreview: false,
 
             properties: {
                 data: {
@@ -231,6 +227,10 @@
                 uid: {
                     type: String,
                     observer: '_fileViewPath'
+                },
+                nuxeoPath: {
+                    type: String,
+                    value: "{{_computePath(route.path)}}"
                 }
             },
 
@@ -239,21 +239,25 @@
                     if (success.srcElement.method === "post") {
                         if (success.detail.response.type == "Folder") {
                             alert("your folder has been created");
-                            this.set('showFolderUploader', false);
+                            this.showFolderUploader = false;
                             this.$.folderAdder.close();
                         } else {
                             alert("your document has been created");
-                            this.set('showDocumentUploader', false);
+                            this.showDocumentUploader = false;
                             this.$.documentAdder.close();
                         }
                     }
                     if (success.srcElement.method === "get") {
-                        let count = responseObject.response.resultsCount;
-                        if (count > 1) {
-                            this.set('results', count);
-                            this.$.contentsNumber.style.display = "flex";
+                        if (responseObject.response.entries) {
+                            let count = responseObject.response.resultsCount;
+                            if (count > 1) {
+                                this.results = count;
+                                this.$.contentsNumber.style.display = "flex";
+                            } else {
+                                this.$.contentsNumber.style.display = "none";
+                            }
                         } else {
-                            this.$.contentsNumber.style.display = "none";
+//                            this.$.nuxeo.path = this._computePath(this.route.path);
                         }
                     }
                 } else {
@@ -261,40 +265,13 @@
                 }
             },
 
-            filePreview: function(event, object) {
-                if (object.response.type === "Picture" || object.response.type === "File") {
-                    this.imagePreview(object);
-                }
-                if (object.response.type === "Note") {
-                    this.notePreview(object);
-                }
-            },
-
-            imagePreview: function(object) {
-                let fileData = object.response.properties["file:content"].data,
-                    mimeType = object.response.properties["file:content"]["mime-type"],
-                    fileName = object.response.properties["file:content"].name;
-                this.set('fileDataPath', fileData);
-                this.set('mimeType', mimeType);
-                this.set('fileName', fileName);
-            },
-
-            notePreview: function(object) {
-                let note = object.response.properties["note:note"],
-                    mimeType = object.response.properties["note:mime_type"],
-                    noteName = object.response.properties["dc:title"];
-                this.set('note', note);
-                this.set('mimeType', mimeType);
-                this.set('fileName', noteName);
-            },
-
             openFolderAdder: function() {
-                this.set('showFolderUploader', true);
+                this.showFolderUploader = true;
                 this.$.folderAdder.open();
             },
 
             openDocumentAdder: function() {
-                this.set('showDocumentUploader', true);
+                this.showDocumentUploader = true;
                 this.$.documentAdder.open();
             },
 
@@ -312,18 +289,21 @@
             },
 
             viewResource: function(e) {
-                this.set('uid', "");
-                this.set('uid', e.model.item.uid);
+                this.uid = e.model.item.uid;
             },
 
             _fileViewPath: function(uid) {
-                this.set('showPreview', true);
-                this.$.filePreview.open();
+                if (this.uid != "") {
+                    this.$.filePreview.open();
+                } else {
+                    return false;
+                }
             },
 
             _computePath: function(path) {
                 return 'path/default-domain/workspaces/' + ((path) ? path + '/' : '') + '@children';
             },
+
             _computeName: function(path) {
                 if (path === "") {
                     return "root";
@@ -334,23 +314,16 @@
 
             _manageUploadPath: function(data) {
                 let nuxeo = this.$.nuxeo,
-                        path = nuxeo.path,
-                        postPath = path.split('@')[0];
+                    path = nuxeo.path,
+                    postPath = path.split('@')[0];
                 nuxeo.setAttribute("data", data);
                 nuxeo.setAttribute("path", postPath);
-                nuxeo.post();
-                nuxeo.removeAttribute('data');
-            },
-
-            _createEmbed: function() {
-                this.$.filecontent.src = this.fileDataPath;
-            },
-
-            _clearProps: function() {
-                this.set('fileDataPath', "");
-                this.set('mimeType', "");
-                this.set('fileName', "");
-                this.set('note', "");
+                nuxeo.post()
+                    .then(function(results) {
+                        nuxeo.removeAttribute("data");
+                        let newPath = 'path' + results.path.split(results.title)[0] + '@children';
+                        nuxeo.setAttribute("path", newPath);
+                    });
             }
         });
 

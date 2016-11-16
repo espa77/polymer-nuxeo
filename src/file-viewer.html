@@ -1,5 +1,6 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/nuxeo-elements/nuxeo-document.html">
+<link rel="import" href="../bower_components/iron-image/iron-image.html">
 
 <dom-module id="file-viewer">
 
@@ -11,14 +12,24 @@
             h3 {
                 margin-bottom: 0;
             }
+            paper-button a {
+                text-decoration: none;
+            }
         </style>
-        <head>File Viewer Component</head>
         <body>
-            <nuxeo-document auto doc-id="{{uid}}" on-response="filePreview"></nuxeo-document>
-            <h3>{{fileName}}</h3>
-            <div id="container">
-                <embed id="filecontent" type="{{mimeType}}" width="88%"></embed>
-            </div>
+            <nuxeo-document auto doc-id="[[uid]]" on-response="filePreview" enrichers="thumbnail"></nuxeo-document>
+            <h3>Title: {{fileTitle}}</h3>
+            <span id="container"></span>
+            <template is="dom-if" if="{{imageAttributes}}">
+                <p>Original Height: [[height]]px</p>
+                <p>Original Width: [[width]]px</p>
+                <p>Original Format: [[format]]</p>
+                <p>Original Size: [[fileSize]]</p>
+            </template>
+            <template is="dom-if" if="{{image}}">
+                <iron-image id="test" preload fade src="[[thumbUrl]]" width="90%" style="background-color: lightgray;"></iron-image><br>
+                <paper-button raised><a href="[[fileDataPath]]">DOWNLOAD ORIGINAL</a></paper-button>
+            </template>
         </body>
     </template>
 
@@ -28,52 +39,32 @@
 
             is: 'file-viewer',
 
+            imageAttributes: false,
+            image: false,
+
             properties: {
-
-                uid: {
-                    type: String
-                },
                 fileDataPath: {
-                    type: String,
-                    observer: '_createEmbed'
-                },
-                mimeType: {
                     type: String
                 },
-                fileName: {
+                thumbUrl: {
                     type: String
                 },
-                note: {
-                    type: String,
-                    observer: '_appendNote'
+                fileTitle: {
+                    type: String
+                },
+                height: {
+                    type: String
+                },
+                width: {
+                    type: String
+                },
+                format: {
+                    type: String
+                },
+                fileSize: {
+                    type: String
                 }
-            },
 
-            handleResponse: function(success, responseObject) {
-                if(success.returnValue) {
-                    if (success.srcElement.method === "post") {
-                        if (success.detail.response.type == "Folder") {
-                            alert("your folder has been created");
-                            this.set('showFolderUploader', false);
-                            this.$.folderAdder.close();
-                        } else {
-                            alert("your document has been created");
-                            this.set('showDocumentUploader', false);
-                            this.$.documentAdder.close();
-                        }
-                    }
-                    if (success.srcElement.method === "get") {
-                        let count = responseObject.response.resultsCount;
-                        if (count > 1) {
-                            this.set('results', count);
-                            this.$.contentsNumber.style.display = "flex";
-                        } else {
-                            this.$.contentsNumber.style.display = "none";
-                        }
-                    }
-                } else {
-                    alert("please check your connection to nuxeo")
-                }
             },
 
             filePreview: function(event, object) {
@@ -86,38 +77,28 @@
             },
 
             imagePreview: function(object) {
-                let fileData = object.response.properties["file:content"].data,
-                        mimeType = object.response.properties["file:content"]["mime-type"],
-                        fileName = object.response.properties["file:content"].name;
-                this.set('fileDataPath', fileData);
-                this.set('mimeType', mimeType);
-                this.set('fileName', fileName);
+                this.image = true;
+                this.fileDataPath = object.response.properties["file:content"].data;
+                this.fileSize = object.response.properties["common:size"];
+                this.fileTitle = object.response.title;
+                this.thumbUrl = object.response.contextParameters.thumbnail.url;
+                if (object.response.properties["picture:info"]) {
+                    this.height = object.response.properties["picture:info"].height;
+                    this.width = object.response.properties["picture:info"].width;
+                    this.format = object.response.properties["picture:info"].format;
+                    this.imageAttributes = true;
+                } else {
+                    this.imageAttributes = false;
+                }
             },
 
             notePreview: function(object) {
                 let note = object.response.properties["note:note"],
-                        mimeType = object.response.properties["note:mime_type"],
-                        noteName = object.response.properties["dc:title"];
-                this.set('note', note);
-                this.set('mimeType', mimeType);
-                this.set('fileName', noteName);
-            },
-
-            _createEmbed: function() {
-                this.$.filecontent.style.display = 'block';
-                this.$.filecontent.src = this.fileDataPath;
-            },
-
-            _appendNote: function() {
-                this.$.filecontent.style.display = 'none';
-                this.$.container.innerHTML = this.note;
-            },
-
-            _clearProps: function() {
-                this.set('fileDataPath', "");
-                this.set('mimeType', "");
-                this.set('fileName', "");
-                this.set('note', "");
+                    mimeType = object.response.properties["note:mime_type"],
+                    noteName = object.response.properties["dc:title"];
+                this.note = note;
+                this.mimeType = mimeType;
+                this.fileName = noteName;
             }
         });
 
