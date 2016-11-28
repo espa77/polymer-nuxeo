@@ -46,7 +46,7 @@
                     </template>
                     <template is="dom-if" if="[[showFileAdd]]">
                         <label>Append File(s):</label>
-                        <nuxeo-file id="test" value="{{batch}}" multiple></nuxeo-file>
+                        <nuxeo-file id="test" value="{{batch}}" fileTypes="{{files}}" multiple></nuxeo-file>
                     </template>
                 </div>
                 <paper-button class="add-new" raised on-tap="submitDocumentForm">CREATE</paper-button>
@@ -79,20 +79,27 @@
                 },
                 batchId: {
                     type: Object
+                },
+                fileTypes: {
+                    type: Array,
+                    observer: '_manageDocumentType'
                 }
             },
             openProps: function() {
-                this.set('showProperties', true);
+                this.showProperties = true;
             },
             openFileAdd: function() {
-                this.set('showFileAdd', true);
+                this.showFileAdd = true;
             },
             _mangeFileUpload: function(data){
-                this.set("batchId", data);
+                this.batchId = data;
+            },
+            _manageDocumentType: function(a, b, c) {
+                debugger;
             },
             submitDocumentForm: function() {
+                debugger;
                 if (this.$.form.name.value) {
-
                     var form = this.$.form,
                         batch = this.batchId,
                         nuxeoData = {
@@ -114,7 +121,7 @@
                     return false;
                 }
                 nuxeoData = JSON.stringify(nuxeoData);
-                this.set("documentData", nuxeoData);
+                this.documentData = nuxeoData;
                 this.$.form.reset();
             }
         });

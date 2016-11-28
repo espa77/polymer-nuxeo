@@ -5,6 +5,7 @@
 <link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../bower_components/neon-animation/animations/scale-up-animation.html">
 <link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-in-animation.html">
 <link rel="import" href="../bower_components/iron-input/iron-input.html">
 <link rel="import" href="../bower_components/iron-form/iron-form.html">
 <link rel="import" href="../bower_components/paper-input/paper-input.html">
@@ -13,6 +14,7 @@
 <link rel="import" href="add-folder.html">
 <link rel="import" href="add-file.html">
 <link rel="import" href="file-viewer.html">
+<link rel="import" href="collection-viewer.html">
 <link rel="import" href="shared-styles.html">
 
 <dom-module id="my-root">
@@ -67,19 +69,24 @@
                 @apply(--layout-wrap);
                 padding-bottom: 1.5em;
             }
-            .folders, .files {
+            .folder, .files, .collection {
                 width: 20%;
                 min-width: 130px;
                 text-align: center;
                 border: 1px solid transparent;
                 border-radius: 5px;
             }
-            .folders {
+            .folder {
                 background: no-repeat top/40% url("../images/folder-icon.png") rgba(255, 255, 255, 0.05);
                 padding-top: 5ch;
                 margin-top: 0.5ch;
             }
-            .folders:hover, .files:hover {
+            .collection {
+                background: no-repeat top/40% url("../images/collection-icon.png") rgba(255, 255, 255, 0.05);
+                padding-top: 5ch;
+                margin-top: 0.5ch;
+            }
+            .folder:hover, .files:hover, .collection:hover {
                 border: 1px solid #3F51B5;
                 background-color: rgba(255, 255, 255, 0.05);
             }
@@ -143,25 +150,30 @@
                 active="{{activeRoute}}"></app-route>
 
         <nuxeo-resource auto id="nuxeo" path="{{_computePath(route.path)}}" response="{{docs}}" on-response="handleResponse"></nuxeo-resource>
+
         <div id="container">
-            <h1 class="folder-title"><span id="routeFolderTitle">{{_computeName(route.path)}}</span> Folder</h1>
+
+            <h1 class="folder-title"><span id="routeFolderTitle">[[_computeName(route.path)]]</span> Folder</h1>
             <div class="flex">
                 <h2 id="contents-text">Contents</h2>
                 <h3 id="contentsNumber" style="display:none">There are {{results}} documents in this folder</h3>
                 <div class="sub-container">
                     <h3><span class="sub-title">Folders</span></h3>
                     <div class="folder-list">
-                        <template is="dom-repeat" id="repeater" items="{{docs.entries}}"
-                                  filter="isFolder" observe="facets">
-                            <div class="folders title" id="{{item.path}}" on-tap="viewFolder">{{item.title}}</div>
+                        <template is="dom-repeat" items="{{docs.entries}}" filter="isFolder">
+                            <div class="title folder" id="[[item.path]]" on-tap="viewFolder">{{item.title}}</div>
+                        </template>
+                        <template is="dom-repeat" items="{{docs.entries}}" filter="isCollection">
+                            <div class="title collection" id="[[item.uid]]" on-tap="viewResource">{{item.title}}</div>
                         </template>
                         <paper-button raised class="new" on-tap="openFolderAdder">ADD FOLDER</paper-button>
                     </div>
                     <h3 id="file-title"><span class="sub-title">Documents</span></h3>
                     <div class="file-list">
                         <template is="dom-repeat" items="{{docs.entries}}"
-                                  filter="isFile" observe="facets">
-                            <div class="files title" id={{item.uid}} on-tap="viewResource">{{item.title}}</div>
+                                  filter="isFile">
+                            <!--suppress XmlDuplicatedId -->
+                            <div class="files title" id=[[item.uid]] on-tap="viewResource">{{item.title}}</div>
                         </template>
                         <paper-button raised class="new" on-tap="openDocumentAdder">ADD DOCUMENT</paper-button>
                     </div>
@@ -195,14 +207,21 @@
         </paper-dialog>
 
         <!--FILE PREVIEW MODAL-->
-        <paper-dialog id="filePreview"
-                      entry-animation="scale-up-animation"
-                      exit-animation="fade-out-animation">
-
-                <file-viewer id="fileView" uid="[[uid]]" ></file-viewer>
+        <paper-dialog id="filePreview" on-iron-overlay-closed="resetProps">
+                <file-viewer id="fileView" uid="[[uid]]" reset="[[reset]]"></file-viewer>
                 <div class="buttons">
                     <paper-button dialog-dismiss>Close</paper-button>
                 </div>
+        </paper-dialog>
+
+        <!--COLLECTION VIEW MODAL-->
+        <paper-dialog id="collectionPreview"
+                      entry-animation="scale-up-animation"
+                      exit-animation="fade-out-animation">
+            <collection-viewer id="collectionView" uid="[[collectionUid]]"></collection-viewer>
+            <div class="buttons">
+                <paper-button dialog-dismiss>Close</paper-button>
+            </div>
         </paper-dialog>
 
     </template>
@@ -215,8 +234,13 @@
 
             showDocumentUploader: false,
             showFolderUploader: false,
+            collection: false,
+            folder: false,
 
             properties: {
+                reset: {
+                    type: Boolean
+                },
                 data: {
                     type: Object,
                     observer: '_manageUploadPath'
@@ -231,6 +255,34 @@
                 nuxeoPath: {
                     type: String,
                     value: "{{_computePath(route.path)}}"
+                },
+                collectionUid: {
+                    type: String,
+                    observer: '_collectionViewPath'
+                },
+                docArray: {
+                    type: Array
+                }
+            },
+
+            ready: function() {
+                this.$.filePreview.animationConfig = {
+                    // scale up file viewer
+                    'entry': [{
+                        name: 'scale-up-animation',
+                        node: this.$.filePreview,
+                        timing: {duration: 600, easing: 'cubic-bezier(1.000, -0.005, 0.750, 0.750)'}
+                    }, {
+                        name: 'fade-in-animation',
+                        node: this.$.filePreview,
+                        timing: {duration: 400, easing: 'cubic-bezier(1.000, -0.005, 0.750, 0.750)'}
+                    }],
+                    // fade out file viewer
+                    'exit': {
+                        name: 'fade-out-animation',
+                        node: this.$.filePreview,
+                        timing: {duration: 200}
+                    }
                 }
             },
 
@@ -245,19 +297,19 @@
                             alert("your document has been created");
                             this.showDocumentUploader = false;
                             this.$.documentAdder.close();
+                            if (responseObject.response.properties["file:content"]["mime-type"].includes("image")) {
+                                this.imageConverter(responseObject);
+                            }
                         }
                     }
                     if (success.srcElement.method === "get") {
-                        if (responseObject.response.entries) {
-                            let count = responseObject.response.resultsCount;
-                            if (count > 1) {
-                                this.results = count;
-                                this.$.contentsNumber.style.display = "flex";
-                            } else {
-                                this.$.contentsNumber.style.display = "none";
-                            }
+                        debugger;
+                        let count = responseObject.response.resultsCount;
+                        if (count > 1) {
+                            this.results = count;
+                            this.$.contentsNumber.style.display = "flex";
                         } else {
-//                            this.$.nuxeo.path = this._computePath(this.route.path);
+                            this.$.contentsNumber.style.display = "none";
                         }
                     }
                 } else {
@@ -275,12 +327,20 @@
                 this.$.documentAdder.open();
             },
 
+            imageConverter: function(responseObject) {
+                debugger;
+            },
+
             isFolder: function(entries) {
                 return entries.facets.includes("Folderish");
             },
 
+            isCollection: function(entries) {
+                return entries.facets.includes("Collection");
+            },
+
             isFile: function(entries) {
-                return (!entries.facets.includes("Folderish"));
+                return (!entries.facets.includes("Folderish")) && (!entries.facets.includes("Collection"));
             },
 
             viewFolder: function(e) {
@@ -289,7 +349,25 @@
             },
 
             viewResource: function(e) {
-                this.uid = e.model.item.uid;
+                if (e.model.item.facets.includes("Collection")) {
+                    this.docArray = e.model.item.properties["collection:documentIds"];
+                    this.collectionUid = e.model.item.uid;
+                } else {
+                    this.uid = e.model.item.uid;
+                }
+            },
+
+            resetProps: function() {
+                this.reset = !this.reset;
+            },
+
+            _collectionViewPath: function(collectionUid) {
+                if (this.docArray.length > 0 && this.collectionUid != "") {
+                    this.$.collectionPreview.open();
+                } else {
+                    alert("this Collection has no linked documents");
+                    return false;
+                }
             },
 
             _fileViewPath: function(uid) {
