@@ -4,6 +4,7 @@
 <link rel="import" href="../bower_components/paper-dialog-scrollable/paper-dialog-scrollable.html">
 <link rel="import" href="../bower_components/nuxeo-ui-elements/viewers/nuxeo-image-viewer.html">
 <link rel="import" href="../bower_components/nuxeo-ui-elements/viewers/nuxeo-video-viewer.html">
+<link rel="import" href="../bower_components/nuxeo-web-ui/elements/nuxeo-document-preview/nuxeo-document-preview.html">
 
 <dom-module id="file-viewer">
 
@@ -30,10 +31,7 @@
                 <p>Original Size: [[_formatSize(fileSize)]]</p>
             </template>
             <template is="dom-if" if="{{typeImage}}">
-                <nuxeo-image-viewer src="[[fileDataPath]]"
-                                    controls
-                                    responsive>
-                </nuxeo-image-viewer>
+                <nuxeo-document-preview document="{{documentObject}}"></nuxeo-document-preview>
                 <paper-button raised><a href="[[fileDataPath]]">DOWNLOAD ORIGINAL</a></paper-button>
             </template>
             <template is="dom-if" if="{{typeAudio}}">
@@ -73,6 +71,9 @@
                 typeVideo: {
                     type: Boolean,
                     value: false
+                },
+                documentObject: {
+                    type: Object
                 },
                 fileDataPath: {
                     type: String
@@ -155,6 +156,7 @@
 
             filePreview: function(object) {
                 this.fileDataPath = object.response.properties["file:content"].data;
+                this.documentObject = object.response;
                 this.fileSize = object.response.properties["common:size"];
                 this.fileTitle = object.response.title;
                 this.thumbUrl = object.response.contextParameters.thumbnail.url;
