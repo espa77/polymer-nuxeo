@@ -1,4 +1,5 @@
 <!--
+@license
 (C) Copyright 2016 Nuxeo SA (http://nuxeo.com/) and others.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -11,13 +12,10 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Contributors:
-    Gabriel Barata <gbarata@nuxeo.com>
 -->
 <link rel="import" href="../../polymer/polymer.html">
 <link rel="import" href="../../nuxeo-elements/nuxeo-resource.html">
-<link rel="import" href="../../nuxeo-elements/widgets/nuxeo-user-suggestion.html">
+<link rel="import" href="../widgets/nuxeo-user-suggestion.html">
 <link rel="import" href="../../paper-button/paper-button.html">
 <link rel="import" href="../../paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../../paper-icon-button/paper-icon-button.html">
@@ -49,7 +47,7 @@ Used by `nuxeo-user-group-management`
       }
 
       .footer {
-        margin-top: 48px;
+        margin: 2em 0 4em;
       }
 
       .label-container {
@@ -166,12 +164,12 @@ Used by `nuxeo-user-group-management`
     <div class="header horizontal layout center">
       <paper-icon-button class="backButton" icon="icons:arrow-back" on-tap="_goHome"></paper-icon-button>
       <iron-icon icon="social:people"></iron-icon>
-      <h3>[[i18n('usergroupmanagement.newgroup.title', 'New Group')]]</h3>
+      <h3>[[i18n('createGroup.heading', 'New Group')]]</h3>
     </div>
     <form is="iron-form" id="form" class="vertical layout">
       <div class="row layout horizontal">
         <div class="label-container">
-          <label>[[i18n('label.groupManager.groupName', 'Group Name')]]</label>
+          <label>[[i18n('createGroup.group.name', 'Group Name')]]</label>
         </div>
         <div class="horizontal layout flex required">
           <input id="groupName" value="{{groupName::input}}" class="flex" required>
@@ -179,17 +177,17 @@ Used by `nuxeo-user-group-management`
       </div>
       <div class="row layout horizontal">
         <div class="label-container">
-          <label>[[i18n('label.groupManager.groupLabel', 'Group Label')]]</label>
+          <label>[[i18n('createGroup.group.label', 'Group Label')]]</label>
         </div>
         <input id="groupLabel" value="{{groupLabel::input}}" class="flex">
       </div>
       <div class="row layout horizontal">
         <div class="label-container">
-          <label>[[i18n('label.groupManager.members', 'Members')]]</label>
+          <label>[[i18n('createGroup.members', 'Members')]]</label>
         </div>
         <nuxeo-user-suggestion id="picker"
                                search-type="USER_GROUP_TYPE"
-                               placeholder="[[i18n('label.security.search', 'Search for users and groups')]]"
+                               placeholder="[[i18n('createGroup.search.placeholder', 'Search for users and groups')]]"
                                value="[[selectedUser]]"
                                selected-items="{{selectedUser}}"
                                result-formatter="[[resultFormatter]]">
@@ -224,13 +222,13 @@ Used by `nuxeo-user-group-management`
       </div>
       <div class="footer horizontal layout">
         <div class="label-container">
-          [[i18n('createAnother.checkbox', 'Create another')]]
+          [[i18n('createGroup.createAnother.checkbox', 'Create another')]]
           <paper-checkbox id="another"></paper-checkbox>
         </div>
         <div class="layout vertical">
           <div class="form-buttons">
-            <paper-button id="createButton" class="primary" on-tap="_submit">[[i18n('command.create', 'Create')]]</paper-button>
-            <paper-button id="cancelButton" on-tap="_cancel">[[i18n('command.cancel', 'Cancel')]]</paper-button>
+            <paper-button noink id="createButton" class="primary" on-tap="_submit">[[i18n('command.create', 'Create')]]</paper-button>
+            <paper-button noink id="cancelButton" on-tap="_cancel">[[i18n('command.cancel', 'Cancel')]]</paper-button>
           </div>
           <span id="errors" hidden$="[[!_hasErrors(errors)]]">[[errors]]</span>
         </div>

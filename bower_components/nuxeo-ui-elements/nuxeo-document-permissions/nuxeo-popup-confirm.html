@@ -1,4 +1,5 @@
 <!--
+@license
 (C) Copyright 2015 Nuxeo SA (http://nuxeo.com/) and others.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -11,21 +12,28 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Contributors:
-  Thomas Roger <troger@nuxeo.com>
 -->
 <link rel="import" href="../../paper-button/paper-button.html">
 <link rel="import" href="../../paper-dialog/paper-dialog.html">
 <link rel="import" href="../../paper-dialog-scrollable/paper-dialog-scrollable.html">
 
 <!--
-`nuxeo-popup-confirm`
+Element providing a confirmation popup.
+
 @group Nuxeo UI
 @element nuxeo-popup-confirm
 -->
 <dom-module id="nuxeo-popup-confirm">
   <template>
+
+    <style>
+      input {
+        width: 100%;
+        line-height: 1.4em;
+        padding: 0.5em;
+      }
+    </style>
+
     <paper-dialog id="dialog">
       <paper-dialog-scrollable>
         <content></content>
@@ -44,8 +52,16 @@ Contributors:
     is: 'nuxeo-popup-confirm',
 
     properties: {
+      /**
+       * Cancel handler.
+       */
       onCancel: Function,
+
+      /**
+       * Confirm handler.
+       */
       onConfirm: Function,
+
       deleteLabel: {
         type: String,
         value: 'Delete'
@@ -56,6 +72,9 @@ Contributors:
       }
     },
 
+    /**
+     * Toggle the popup. Optionally you can specific the comfirm handler as parameter.
+     */
     toggle: function(func) {
       if(typeof func === 'function') {
         this.onConfirm = func;

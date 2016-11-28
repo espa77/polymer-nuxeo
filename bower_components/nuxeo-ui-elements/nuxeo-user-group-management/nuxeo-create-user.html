@@ -1,4 +1,5 @@
 <!--
+@license
 (C) Copyright 2016 Nuxeo SA (http://nuxeo.com/) and others.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -11,14 +12,10 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Contributors:
-    Gabriel Barata <gbarata@nuxeo.com>
-    Andre Justo <ajusto@nuxeo.com>
 -->
 <link rel="import" href="../../polymer/polymer.html">
 <link rel="import" href="../../nuxeo-elements/nuxeo-resource.html">
-<link rel="import" href="../../nuxeo-elements/widgets/nuxeo-user-suggestion.html">
+<link rel="import" href="../widgets/nuxeo-user-suggestion.html">
 <link rel="import" href="../../paper-button/paper-button.html">
 <link rel="import" href="../../paper-checkbox/paper-checkbox.html">
 <link rel="import" href="../../paper-icon-button/paper-icon-button.html">
@@ -51,7 +48,7 @@ Used by `nuxeo-user-group-management`
       }
 
       .footer {
-        margin-top: 48px;
+        margin: 2em 0 4em;
       }
 
       .label-container {
@@ -140,21 +137,21 @@ Used by `nuxeo-user-group-management`
     <div class="header horizontal layout center">
       <paper-icon-button class="backButton" icon="icons:arrow-back" on-tap="_goHome"></paper-icon-button>
       <iron-icon icon="social:person"></iron-icon>
-      <h3>[[i18n('title.createUser', 'New User')]]</h3>
+      <h3>[[i18n('createUser.heading', 'New User')]]</h3>
     </div>
     <form is="iron-form" id="form" class="vertical layout">
       <div class="row layout horizontal">
         <div class="label-container">
-          <label>[[i18n('username', 'Username')]]</label>
+          <label>[[i18n('createUser.username', 'Username')]]</label>
         </div>
         <div class="horizontal layout flex required">
-          <input value="{{user.username::input}}" class="flex" required disabled$="[[!new]]">
+          <input value="{{user.username::input}}" class="flex" required>
         </div>
       </div>
       <nuxeo-edit-user id="propertyEditor" user="{{user}}" new></nuxeo-edit-user>
       <div class="row layout horizontal">
         <div class="label-container">
-          <label>[[i18n('label.immediateCreation', 'Set User Password')]]</label>
+          <label>[[i18n('createUser.setPassword', 'Set User Password')]]</label>
         </div>
         <div class="flex">
           <div class="row layout horizontal">
@@ -167,13 +164,13 @@ Used by `nuxeo-user-group-management`
       </div>
       <div class="footer horizontal layout">
         <div class="label-container">
-          [[i18n('createAnother.checkbox', 'Create another')]]
+          [[i18n('createUser.createAnother.checkbox', 'Create another')]]
           <paper-checkbox id="another"></paper-checkbox>
         </div>
         <div class="layout vertical">
           <div class="form-buttons">
-            <paper-button id="createButton" class="primary" on-click="_submit">[[i18n('command.create', 'Create')]]</paper-button>
-            <paper-button id="cancelButton" on-tap="_cancel">[[i18n('command.cancel', 'Cancel')]]</paper-button>
+            <paper-button noink id="createButton" class="primary" on-click="_submit">[[i18n('command.create', 'Create')]]</paper-button>
+            <paper-button noink id="cancelButton" on-tap="_cancel">[[i18n('command.cancel', 'Cancel')]]</paper-button>
           </div>
           <span id="errors" hidden$="[[!_hasErrors(errors)]]">[[errors]]</span>
         </div>
@@ -201,6 +198,11 @@ Used by `nuxeo-user-group-management`
       errors: {
         type: String,
         value: ''
+      },
+
+      isAdministrator: {
+        type: Boolean,
+        value: false
       }
     },
 
@@ -226,6 +228,10 @@ Used by `nuxeo-user-group-management`
      * Creates a new user if the form was successfully submitted.
      */
     _create: function() {
+      if (!this.isAdministrator && this.user.groups && this.user.groups.indexOf('administrators') !== -1) {
+        this.errors = this.i18n('createUser.errorAdministratorsGroup');
+        return;
+      }
       this._doCreate(this.user).then(function(user) {
           this._resetFields();
           if (!this.$.another.checked) {

@@ -1,6 +1,6 @@
 ## Client Library for Nuxeo API
 
-[![Build Status](https://qa.nuxeo.org/jenkins/buildStatus/icon?job=nuxeo-js-client-master&style=flat)](http://qa.nuxeo.org/jenkins/job/nuxeo-js-client-master)
+[![Build Status](https://qa.nuxeo.org/jenkins/buildStatus/icon?job=/Client/nuxeo-js-client-master/&style=flat)](https://qa.nuxeo.org/jenkins/job/Client/job/nuxeo-js-client-master)
 [![npm version](https://img.shields.io/npm/v/nuxeo.svg?style=flat-square)](https://www.npmjs.com/package/nuxeo)
 [![npm downloads](https://img.shields.io/npm/dm/nuxeo.svg?style=flat-square)](https://www.npmjs.com/package/nuxeo)
 [![Dependency Status](https://img.shields.io/david/nuxeo/nuxeo-js-client.svg?style=flat-square)](https://david-dm.org/nuxeo/nuxeo-js-client) [![devDependency Status](https://img.shields.io/david/dev/nuxeo/nuxeo-js-client.svg?style=flat-square)](https://david-dm.org/nuxeo/nuxeo-js-client#info=devDependencies)
@@ -11,31 +11,50 @@ This is an on-going project, supported by Nuxeo.
 
 ## Getting Started
 
+### Nuxeo Platform - JS Client Dependencies
+
+| Nuxeo Platform | JS Client |
+| -------------- |-----------|
+| LTS 2015       | >= 1.x.x  |
+| FT 8.x         | >= 2.x.x  |
+
 ### Installation
 
 #### Node.js Applications
 
 After installing [Node.js](http://nodejs.org/#download), use `npm` to install the `nuxeo` package:
 
-    $ npm install nuxeo --save
+* For the latest 2.x.x version:
+
+        $ npm install nuxeo@2 --save
+
+* For the latest 1.x.x version:
+
+        $ npm install nuxeo@1 --save
 
 Then, use the following `require` statement to have access to the same API than the browser client:
 
 ```javascript
 var Nuxeo = require('nuxeo');
-var nuxeo = new Nuxeo();
+var nuxeo = new Nuxeo({ ... });
 ```
 
 #### Bower Powered Applications
 
 The `nuxeo` client can be also installed through bower:
 
-    $ bower install nuxeo --save
+* For the latest 2.x.x version:
+
+        $ bower install nuxeo@2 --save
+
+* For the latest 1.x.x version:
+
+        $ bower install nuxeo@1 --save
 
 When added to your page, `Nuxeo` is available as a global variable.
 
 ```javascript
-var nuxeo = new Nuxeo();
+var nuxeo = new Nuxeo({ ... });
 ```
 
 #### Angular Applications
@@ -82,9 +101,17 @@ $q.when(nuxeo.request('/path/').get()).then(function(res) {
 ...
 ```
 
+#### React Applications
+
+After adding `nuxeo` through `npm` to your application, you must require `nuxeo` as follows:
+
+```javascript
+var Nuxeo = require('nuxeo/dist/nuxeo');
+```
+
 ## Documentation
 
-Check out the [API documentation](https://nuxeo.github.io/nuxeo-js-client/0.25.0/).
+Check out the [API documentation](https://nuxeo.github.io/nuxeo-js-client/2.2.0/).
 
 ## Requirements
 
@@ -125,6 +152,7 @@ All API calls made on the server return a Promise object.
 
 ```javascript
 nuxeo.operation('Document.GetChildren')
+  .input('/')
   .execute()
   .then(function(docs) {
     // work with docs
@@ -142,7 +170,7 @@ When something went wrong, the `error` is an `Error` object with a `response` fi
 `Operation` object allows you to execute an operation
 (or operation chain).
 
-See the [Operation](https://nuxeo.github.io/nuxeo-js-client/0.25.0/Operation.html) documentation.
+See the [Operation](https://nuxeo.github.io/nuxeo-js-client/2.2.0/Operation.html) documentation.
 
 #### Samples
 
@@ -169,7 +197,7 @@ nuxeo.operation('Document.Create')
 
 The `Request` object allows you to call the Nuxeo REST API.
 
-See the [Request](https://nuxeo.github.io/nuxeo-js-client/0.25.0/Request.html) documentation.
+See the [Request](https://nuxeo.github.io/nuxeo-js-client/2.2.0/Request.html) documentation.
 
 #### Samples
 
@@ -203,7 +231,7 @@ nuxeo.request('directory/nature')
 
 The `Repository` object allows you to work with document.
 
-See the [Repository](https://nuxeo.github.io/nuxeo-js-client/0.25.0/Repository.html) documentation.
+See the [Repository](https://nuxeo.github.io/nuxeo-js-client/2.2.0/Repository.html) documentation.
 
 #### Samples
 
@@ -264,7 +292,7 @@ nuxeo.repository()
 `Repository` object returns and works with `Document` objects. `Document` objects exposes a simpler API
 to work with a document.
 
-See the [Document](https://nuxeo.github.io/nuxeo-js-client/0.25.0/Document.html) documentation.
+See the [Document](https://nuxeo.github.io/nuxeo-js-client/2.2.0/Document.html) documentation.
 
 #### Samples
 
@@ -303,7 +331,7 @@ nuxeo.repository()
     doc.set({ 'dc:title': 'foo' });
     return doc.save();
   })
-  .then(function(doc) => {
+  .then(function(doc) {
     // doc.title === 'foo'
   })
   .catch(function(error) {
@@ -363,7 +391,7 @@ workflow.fetchTasks()
       .variable('end_date', '2011-10-23T12:00:00.00Z');
     return task.complete('start_review', { comment: 'a comment' });
   })
-  .then((task) => {
+  .then(function(task) {
     // task.state === 'ended'
   })
 ```
@@ -373,7 +401,7 @@ workflow.fetchTasks()
 The `BatchUpload` object allows you to upload blobs to a Nuxeo Platform instance, and use them as operation input or
 as document property value.
 
-See the [BatchUpload](https://nuxeo.github.io/nuxeo-js-client/0.25.0/BatchUpload.html) documentation.
+See the [BatchUpload](https://nuxeo.github.io/nuxeo-js-client/2.2.0/BatchUpload.html) documentation.
 
 #### Samples
 
@@ -425,8 +453,8 @@ nuxeo.batchUpload()
 
 The `Users` object allows you to work with users.
 
-See the [Users](https://nuxeo.github.io/nuxeo-js-client/0.25.0/Users.html) and
-[User](https://nuxeo.github.io/nuxeo-js-client/0.25.0/User.html) documentation.
+See the [Users](https://nuxeo.github.io/nuxeo-js-client/2.2.0/Users.html) and
+[User](https://nuxeo.github.io/nuxeo-js-client/2.2.0/User.html) documentation.
 
 #### Samples
 
@@ -471,8 +499,8 @@ nuxeo.users()
 
 The `Groups` object allows you to work with groups.
 
-See the [Groups](https://nuxeo.github.io/nuxeo-js-client/0.25.0/Groups.html) and
-[Group](https://nuxeo.github.io/nuxeo-js-client/0.25.0/Group.html) documentation.
+See the [Groups](https://nuxeo.github.io/nuxeo-js-client/2.2.0/Groups.html) and
+[Group](https://nuxeo.github.io/nuxeo-js-client/2.2.0/Group.html) documentation.
 
 #### Samples
 
@@ -512,8 +540,8 @@ nuxeo.groups()
 
 The `Directory` object allows you to work with directories.
 
-See the [Directory](https://nuxeo.github.io/nuxeo-js-client/0.25.0/Directory.html) and
-[DirectoryEntry](https://nuxeo.github.io/nuxeo-js-client/0.25.0/DirectoryEntry.html) documentation.
+See the [Directory](https://nuxeo.github.io/nuxeo-js-client/2.2.0/Directory.html) and
+[DirectoryEntry](https://nuxeo.github.io/nuxeo-js-client/2.2.0/DirectoryEntry.html) documentation.
 
 #### Samples
 
@@ -560,7 +588,7 @@ __Delete a directory entry__
 ```javascript
 nuxeo.directory('nature')
  .delete('foo')
- .then((res) => {
+ .then(function(res) {
    // res.status === 204
  });
 ```
@@ -615,4 +643,4 @@ You can report issues on [answers.nuxeo.com](http://answers.nuxeo.com).
 
 ## About Nuxeo
 
-Nuxeo dramatically improves how content-based applications are built, managed and deployed, making customers more agile, innovative and successful. Nuxeo provides a next generation, enterprise ready platform for building traditional and cutting-edge content oriented applications. Combining a powerful application development environment with SaaS-based tools and a modular architecture, the Nuxeo Platform and Products provide clear business value to some of the most recognizable brands including Verizon, Electronic Arts, Netflix, Sharp, FICO, the U.S. Navy, and Boeing. Nuxeo is headquartered in New York and Paris. More information is available at [www.nuxeo.com](http://www.nuxeo.com/).
+Nuxeo dramatically improves how content-based applications are built, managed and deployed, making customers more agile, innovative and successful. Nuxeo provides a next generation, enterprise ready platform for building traditional and cutting-edge content oriented applications. Combining a powerful application development environment with SaaS-based tools and a modular architecture, the Nuxeo Platform and Products provide clear business value to some of the most recognizable brands including Verizon, Electronic Arts, Sharp, FICO, the U.S. Navy, and Boeing. Nuxeo is headquartered in New York and Paris. More information is available at [www.nuxeo.com](http://www.nuxeo.com/).

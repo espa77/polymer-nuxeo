@@ -12,9 +12,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Contributors:
-  Nelson Silva <nsilva@nuxeo.com>
 -->
 <html>
 <head>
@@ -67,7 +64,7 @@ Contributors:
 <body>
 <template is="dom-bind">
   <nuxeo-connection id="nx" url="http://localhost:8080/nuxeo" username="Administrator" password="Administrator"></nuxeo-connection>
-  <nuxeo-page-provider auto pageSize="5" current-page="{{docs}}"
+  <nuxeo-page-provider auto page-size="5" current-page="{{docs}}"
                        query="[[query(docType)]]"></nuxeo-page-provider>
   <div class="container" class="layout vertical center">
 

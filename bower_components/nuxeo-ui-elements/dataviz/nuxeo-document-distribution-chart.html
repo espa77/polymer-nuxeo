@@ -19,6 +19,7 @@ Contributors:
 <link rel="import" href="../../nuxeo-elements/nuxeo-connection.html">
 <link rel="import" href="../../paper-radio-group/paper-radio-group.html">
 <link rel="import" href="../../paper-checkbox/paper-checkbox.html">
+<link rel="import" href="../../paper-spinner/paper-spinner-lite.html">
 <script src="../../d3/d3.min.js"></script>
 <script src="../../randomcolor/randomColor.js"></script>
 <link rel="import" href="../nuxeo-i18n-behavior.html">
@@ -63,7 +64,7 @@ Example:
       }
 
       #sequence {
-        width: 600px;
+        width: 100%;
         height: 70px;
       }
 
@@ -116,21 +117,21 @@ Example:
       </div>
       <div id="sb" class="loadable">
         <paper-radio-group selected="{{mode}}" on-paper-radio-group-changed="execute">
-          <paper-radio-button name="size">[[i18n('label.docdistribution.size', 'Size')]]</paper-radio-button>
-          <paper-radio-button name="count">[[i18n('label.docdistribution.count', 'Document Count')]]</paper-radio-button>
+          <paper-radio-button name="size">[[i18n('documentDistributionChart.size', 'Size')]]</paper-radio-button>
+          <paper-radio-button name="count">[[i18n('documentDistributionChart.count', 'Document Count')]]</paper-radio-button>
         </paper-radio-group>
         <p/>
-        <paper-checkbox on-change="execute" checked="{{includeHidden}}">[[i18n('label.docdistribution.include_hidden', 'Include Hidden Documents')]]</paper-checkbox>
+        <paper-checkbox on-change="execute" checked="{{includeHidden}}">[[i18n('documentDistributionChart.includeHidden', 'Include Hidden Documents')]]</paper-checkbox>
         <p/>
-        <paper-checkbox on-change="execute" checked="{{includeDeleted}}">[[i18n('label.docdistribution.include_deleted', 'Include Deleted Documents')]]</paper-checkbox>
+        <paper-checkbox on-change="execute" checked="{{includeDeleted}}">[[i18n('documentDistributionChart.includeDeleted', 'Include Deleted Documents')]]</paper-checkbox>
         <p/>
-        <paper-checkbox on-change="execute" checked="{{includeVersion}}">[[i18n('label.docdistribution.include_versions', 'Include Versions')]]</paper-checkbox>
+        <paper-checkbox on-change="execute" checked="{{includeVersion}}">[[i18n('documentDistributionChart.includeVersions', 'Include Versions')]]</paper-checkbox>
         <p/>
-        <paper-checkbox on-change="execute" checked="{{onlyFolder}}" disabled="[[_chechFolderDisabled(mode)]]">[[i18n('label.docdistribution.folders_only', 'Only Folders')]]</paper-checkbox>
+        <paper-checkbox on-change="execute" checked="{{onlyFolder}}" disabled="[[_chechFolderDisabled(mode)]]">[[i18n('documentDistributionChart.foldersOnly', 'Only Folders')]]</paper-checkbox>
         <p/>
       </div>
 
-      <paper-spinner-lite active hidden=[[!loading]]></paper-spinner-lite>
+      <paper-spinner-lite active hidden$=[[!loading]]></paper-spinner-lite>
 
     </div>
 
@@ -284,7 +285,7 @@ Example:
         _computeSizeQuery: function () {
           var query;
 
-          var pathDepth = this.path.split('/').length;
+          var pathDepth = this.path.replace(/\/$/, "").split('/').length;
 
           var subPart = {
             "size": {
@@ -302,7 +303,7 @@ Example:
               },
               "subLevel": {
                 "terms": {
-                  "field": "ecm:path.level" + depth,
+                  "field": "ecm:path@level" + depth,
                   "size": 0
                 },
                 "aggs": subPart
@@ -319,7 +320,7 @@ Example:
             "aggs": {
               "subLevel": {
                 "terms": {
-                  "field": "ecm:path.level" + pathDepth,
+                  "field": "ecm:path@level" + pathDepth,
                   "size": 0
                 },
                 "aggs": subPart
@@ -332,12 +333,12 @@ Example:
         _computeDocCountQuery: function () {
           var query;
 
-          var pathDepth = this.path.split('/').length;
+          var pathDepth = this.path.replace(/\/$/, "").split('/').length;
 
           var subPart = {
             "subLevel": {
               "terms": {
-                "field": "ecm:path.level" + (pathDepth - 1 + this.maxDepth),
+                "field": "ecm:path@level" + (pathDepth - 1 + this.maxDepth),
                 "size": 0,
                 "order": {
                   "_count": "desc"
@@ -350,7 +351,7 @@ Example:
             subPart = {
               "subLevel": {
                 "terms": {
-                  "field": "ecm:path.level" + depth,
+                  "field": "ecm:path@level" + depth,
                   "size": 0,
                   "order": {
                     "_count": "desc"
@@ -372,7 +373,7 @@ Example:
           return query;
         },
 
-        _computeQueryFilter(path) {
+        _computeQueryFilter(mode, path) {
           var result = [];
           if (this.onlyFolder && this.mode !== 'size') {
             result.push({
@@ -427,9 +428,9 @@ Example:
             });
           }
           if (path && path.length > 0) {
-            var split = path.split('/');
+            var split = path.replace(/\/$/, "").split('/');
             for (var i = 1; i < split.length; i++) {
-              var propName = "ecm:path.level" + i;
+              var propName = "ecm:path@level" + i;
               var toPush = {
                 "constant_score": {
                     "filter": {
@@ -438,7 +439,7 @@ Example:
                     }
                 }
               };
-              toPush.constant_score.filter.term["ecm:path.level" + i] = split[i];
+              toPush.constant_score.filter.term["ecm:path@level" + i] = split[i];
               result.push(toPush);
             }
           }
@@ -725,13 +726,18 @@ Example:
           $(this.$.sequence).empty()
           // Add the svg area.
           var trail = d3.select(this.$.sequence).append("svg:svg")
-              .attr("width", this.width)
+              .attr("width", '100%')
               .attr("height", 50)
               .attr("id", "trail");
           // Add the label at the end, for the percentage.
           trail.append("svg:text")
             .attr("id", "endlabel")
             .style("fill", "#000");
+
+          d3.select(this.$.cl)
+              .text('');
+          d3.select(this.$.clb)
+              .text('');
         },
 
         // Generate a string that describes the points of a breadcrumb polygon.
@@ -766,9 +772,9 @@ Example:
           } else if (this.mode === 'count') {
             var result = value + ' ';
             if (value > 1) {
-              result += this.i18n('label.docdistribution.documents', 'Documents');
+              result += this.i18n('documentDistributionChart.documents', 'Documents');
             } else {
-              result += this.i18n('label.docdistribution.document', 'Document');
+              result += this.i18n('documentDistributionChart.document', 'Document');
             }
             return result;
           } else {

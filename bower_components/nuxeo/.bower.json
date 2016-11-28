@@ -12,14 +12,14 @@
     "test"
   ],
   "homepage": "https://github.com/nuxeo/nuxeo-js-client",
-  "version": "0.25.0",
-  "_release": "0.25.0",
+  "version": "2.2.0",
+  "_release": "2.2.0",
   "_resolution": {
     "type": "version",
-    "tag": "v0.25.0",
-    "commit": "d7aaaa843b58871bc5cf5190bed0687ba4cc5815"
+    "tag": "v2.2.0",
+    "commit": "053f0a56b9dab3fb3cc87853e01e4e09f6abee73"
   },
   "_source": "https://github.com/nuxeo/nuxeo-js-client.git",
-  "_target": "0.25.0",
+  "_target": "^2.0.2",
   "_originalSource": "nuxeo"
 }

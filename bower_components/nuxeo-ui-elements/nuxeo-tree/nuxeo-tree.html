@@ -1,4 +1,5 @@
 <!--
+@license
 (C) Copyright 2016 Nuxeo SA (http://nuxeo.com/) and contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +13,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Contributors:
-  Andre Justo <ajusto@nuxeo.com>
 -->
 <link rel="import" href="../../polymer/polymer.html">
 <link rel="import" href="../../iron-icons/iron-icons.html">
@@ -65,13 +63,16 @@ and `isLeaf` which are added to the binding scope):
     <template is="dom-if" if="[[opened]]">
       <iron-icon icon="hardware:keyboard-arrow-down" toggle></iron-icon>
     </template>
-    <span>My title is: [[item.title]]</span>
+    <span select>My title is: [[item.title]]</span>
     <span>Am I a leaf? [[isLeaf]]</span>
   </template>
 </nuxeo-tree>
 ```
 
 The attribute `[toggle]` can be added to any element in the template to toggle a node between opened and closed.
+
+The attribute `[select]` can be added to any element in the template to select a node when clicking the element.
+It will result in the tree firing a 'select' event having the node data as item of the event's detail.
 
 In addition to the template, you must also provide a `controller`.
 For example, for the previous sample:
@@ -100,7 +101,6 @@ controller = {
     <style  is="custom-style">
       :host {
         display: block;
-        margin-left: -0.4em;
         @apply(--nuxeo-tree-theme);
       }
     </style>
@@ -148,15 +148,19 @@ controller = {
         init: function() {
           if (this.data && this.controller) {
             this.template = Polymer.dom(this).querySelector('template');
-            var root = document.createElement('nuxeo-tree-node');
-            root.id = 'root';
-            root.dataHost = this.dataHost;
-            root.controller = this.controller;
-            root.template = this.template;
-            root.nodeKey = this.nodeKey;
-            root.data = this.data;
-            root.dataset[this.nodeKey] = this.data[this.nodeKey];
-            Polymer.dom(this).appendChild(root);
+            if (this._root) {
+              Polymer.dom(this).removeChild(this._root);
+            }
+            this._root = document.createElement('nuxeo-tree-node');
+            this._root.id = 'root';
+            this._root.dataHost = this.dataHost;
+            this._root.controller = this.controller;
+            this._root.template = this.template;
+            this._root.nodeKey = this.nodeKey;
+            this._root.data = this.data;
+            this._root.dataset[this.nodeKey] = this.data[this.nodeKey];
+            Polymer.dom(this).appendChild(this._root);
+            this._root.open();
             Polymer.dom.flush();
           }
         },
@@ -190,7 +194,20 @@ controller = {
         */
         _find: function(key) {
           return this.querySelector('[data-' + this.nodeKey + '="' + key + '"]');
+        },
+
+        removeNodes: function(keys) {
+          if (!keys || keys.length === 0) {
+            return;
+          }
+          var node = this._find(keys[0]);
+          if (node) {
+            node.removeSelf().then(function() {
+              this.removeNodes(Array.prototype.slice.call(keys, 1));
+            }.bind(this));
+          }
         }
+
       });
     })();
   </script>

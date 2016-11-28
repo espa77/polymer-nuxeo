@@ -1,4 +1,5 @@
 <!--
+@license
 (C) Copyright 2016 Nuxeo SA (http://nuxeo.com/) and contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,17 +13,9 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Contributors:
-  Guillaume Renard <grenard@nuxeo.com>
 -->
 <link rel="import" href="../polymer/polymer.html">
 
-<!--
-`nuxeo-page-provider-display-behavior`
-@group Nuxeo UI Elements
-@element nuxeo-page-provider-display-behavior
--->
 <script>
   var Nuxeo = Nuxeo || {};
   (function () {
@@ -42,7 +35,8 @@ Contributors:
 
         emptyLabel: {
           type: String,
-          value : 'No result'
+          value : 'No result',
+          observer: '_observeEmptyLabel'
         },
 
         emptyLabelWhenFiltered: {
@@ -77,6 +71,11 @@ Contributors:
           notify: true,
         },
 
+        multiSelection: {
+          type: Boolean,
+          value: false,
+        },
+
         /**
          * The id of the page provider or the page provider
          * element itself which will be used to feed the
@@ -89,12 +88,10 @@ Contributors:
         /**
          * An array containing path/filter value pairs that are used to filter the items
          */
-        filter: {
+        filters: {
           type: Array,
           notify: true,
-          value: function() {
-            return [];
-          }
+          value: []
         },
 
         /**
@@ -132,9 +129,34 @@ Contributors:
           type: Object,
           notify: true
         },
+        selectedItem: {
+          type: Object,
+          notify: true
+        },
 
         items: {
-          type: Array
+          type: Array,
+          notify: true
+        },
+
+        selectOnTap: {
+          type: Boolean,
+          value: false
+        },
+
+        as: {
+          type: String,
+          value: 'item'
+        },
+
+        displayQuickFilters: {
+          type: Boolean,
+          value: false
+        },
+
+        quickFilters: {
+          type: Array,
+          notify: true
         }
       },
 
@@ -142,12 +164,12 @@ Contributors:
       observers: [
         '_updateFlags(size, loading)',
         '_nxProviderChanged(nxProvider)',
-        '_selectionEnabledChanged(selectionEnabled)',
-        '_onItemsChanged(items)'
+        '_selectionEnabledChanged(selectionEnabled, selectOnTap)',
+        '_onItemsChanged(items)',
       ],
 
       listeners: {
-        'clear-selected-items': 'clearSelection'
+        'column-filter-changed': '_onColumnFilterChanged'
       },
 
       _nxProviderChanged: function(nxProvider) {
@@ -164,7 +186,7 @@ Contributors:
         }
       },
 
-      _loadMoreData: function(e) {
+      _loadMoreData: function() {
         if (!this._isPPLoaded()) {
           return;
         }
@@ -190,11 +212,15 @@ Contributors:
         docs.forEach(function(doc) {
           this.$.list.push('items', doc);
         }.bind(this));
+        this.quickFilters = this.nxProvider.quickFilters;
         this.size = this.$.list.items.length;
         this.$.list.notifyResize();
         this.notifyResize();
         this.$.scrollThreshold.clearTriggers();
         this.loading = false;
+        // just to notify that the update is finished
+        // you can use a property with notify: true instead
+        this.fire('nuxeo-page-loaded');
       },
 
       _resetResults: function() {
@@ -239,7 +265,7 @@ Contributors:
                                             && selectedItems.length < this.size;
           this._isSelectAllChecked = selectedItems && selectedItems.length > 0 && selectedItems.length === this.size;
           this._isEmpty = this.size === 0;
-          this._computedEmptyLabel = (this.filter && this.filter.length > 0) ? this.emptyLabelWhenFiltered : this.emptyLabel;
+          this._computedEmptyLabel = (this.filters && this.filters.length > 0) ? this.emptyLabelWhenFiltered : this.emptyLabel;
         }
       },
 
@@ -250,7 +276,7 @@ Contributors:
         }
       },
 
-      _isSelected: function(item, selectedItems) {
+      _isSelected: function(item) {
         var selected = this.$.list.selectedItems.indexOf(item) > -1;
         return selected;
       },
@@ -283,8 +309,9 @@ Contributors:
 
       _selectionEnabledChanged: function() {
         this.$.list.selectionEnabled = this.selectionEnabled;
-        this.$.list.multiSelection = true;
-        if (this.selectionEnabled) {
+        this.$.list.multiSelection = this.multiSelection;
+        this.$.list.unlisten.call(this.$.list, this.$.list, 'selected', '_selectionHandler');
+        if (this.selectionEnabled && !this.selectOnTap) {
           this.$.list.unlisten.call(this.$.list, this.$.list, 'tap', '_selectionHandler');
           this.$.list.listen.call(this.$.list, this.$.list, 'selected', '_selectionHandler');
         }
@@ -294,6 +321,117 @@ Contributors:
         this.size = this.items.length;
         this.$.list.notifyResize();
         this.notifyResize();
+      },
+
+      _sortDirectionChanged: function(e) {
+        if (!this._isPPLoaded()) {
+          return;
+        }
+        var notFound = true;
+        for (var i = 0; i < this.sortOrder.length; i++) {
+          if (this.sortOrder[i].path === e.detail.path) {
+            if (e.detail.direction) {
+              this.set('sortOrder.' + i + '.direction', e.detail.direction);
+            } else {
+              this.splice('sortOrder', i, 1);
+            }
+            notFound = false;
+            break;
+          }
+        }
+        if (notFound) {
+          this.push('sortOrder', {
+            path: e.detail.path,
+            direction: e.detail.direction
+          });
+        }
+
+        // TODO make it simpler
+        var tmpSort = {};
+        if (this.sortOrder && this.sortOrder.length > 0) {
+          this.sortOrder.forEach(function(sortItem) {
+            tmpSort[sortItem.path] = sortItem.direction;
+          });
+        }
+        if (JSON.stringify(this._ppSort) !== JSON.stringify(tmpSort)) {
+          this._ppSort = tmpSort;
+          this.nxProvider.sort = this._ppSort;
+          this._resetResults();
+          if (!this.nxProvider.auto) {
+            this.nxProvider.fetch();
+          }
+        }
+      },
+
+      _onColumnFilterChanged: function(e) {
+        if (!this._isPPLoaded()) {
+          this.$.list.notifyResize();
+          this.notifyResize();
+          return;
+        }
+        var notFound = true;
+        for (var i = 0; i < this.filters.length; i++) {
+          if (this.filters[i].path === e.detail.filterBy) {
+            if (e.detail.value.length === 0) {
+              this.splice('filters', i, 1);
+            } else {
+              this.set('filters.' + i + '.value', e.detail.value);
+            }
+            notFound = false;
+            break;
+          }
+        }
+
+        if (notFound && e.detail.value.length !== 0) {
+          this.push('filters', {
+            path: e.detail.filterBy,
+            value: e.detail.value,
+            name: e.detail.name
+          });
+        }
+
+        if (this.nxProvider.params[e.detail.filterBy] && e.detail.value.length === 0) {
+          delete this.nxProvider.params[e.detail.filterBy];
+          this._resetResults();
+          this.nxProvider.fetch();
+        } else {
+          if (e.detail.value.length > 0) {
+            if (e.detail.filterBy === 'title' || e.detail.filterBy === 'ecm_fulltext') {
+              this.nxProvider.params[e.detail.filterBy] = e.detail.value + '*';
+            } else {
+              this.nxProvider.params[e.detail.filterBy] = e.detail.value;
+            }
+            this._resetResults();
+            this.nxProvider.fetch();
+          }
+        }
+      },
+
+      scrollToItem: function(item){
+        this.$.list.scrollToItem(item);
+      },
+
+      scrollToIndex: function(idx) {
+        this.$.list.scrollToIndex(idx);
+      },
+
+      _observeEmptyLabel: function() {
+        this._computedEmptyLabel = this.emptyLabel;
+      },
+
+      get items() {
+        return this.$.list.items;
+      },
+
+      focusOnIndexIfNotVisible: function(idx) {
+        if (!this.$.list._isIndexVisible(idx)) {
+          this.$.list.scrollToIndex(idx);
+        }
+      },
+
+      _quickFilterChanged: function() {
+        this._resetResults();
+        this.nxProvider.fetch();
       }
 
     };

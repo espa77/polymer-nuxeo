@@ -1,4 +1,5 @@
 <!--
+@license
 (C) Copyright 2015 Nuxeo SA (http://nuxeo.com/) and contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +13,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Contributors:
-  Nelson Silva <nsilva@nuxeo.com>
-
 -->
 
 <!--
@@ -65,6 +62,7 @@ element.
       /* If true, automatically execute the operation when either `path` or `params` changes. */
       auto: {type: Boolean, value: false},
 
+      /* The HTTP method to use ('GET', 'POST', 'PUT', or 'DELETE'). Default is 'GET' */
       method: { type: String, value: 'get'},
 
       /* The path of the resource. */
@@ -97,38 +95,49 @@ element.
       contentType: {type: String, value: 'application/json'},
 
       /**
+       * List of comma separated values of the document schemas to be returned.
+       * All document schemas are returned by default.
+       */
+      schemas: {type: String, value: ''},
+
+      /**
        * The delay in milliseconds to debounce the auto get call when path, params, etc. changes.
        */
       autoDelay: {
         type: Number,
         value: 300
-      },
+      }
     },
 
     observers: [
       '_autoGet(connectionId, auto, path, params, type, enrichers, enrichersEntity)'
     ],
 
+    /* Execute a 'GET' request */
     get: function () {
       this.method = 'get';
       return this.execute();
     },
 
+    /* Execute a 'POST' request */
     post: function () {
       this.method = 'post';
       return this.execute();
     },
 
+    /* Execute a 'PUT' request */
     put: function () {
       this.method = 'put';
       return this.execute();
     },
 
+    /* Execute a 'DELETE' request */
     remove: function () {
       this.method = 'delete';
       return this.execute();
     },
 
+    /* Execute the request */
     execute: function () {
       var options = {
         method: this.method || 'get'
@@ -138,6 +147,10 @@ element.
         options.body = this.data;
       }
 
+      // Look up document schemas to be returned
+      if (this.schemas && this.schemas.length > 1) {
+          options.schemas = this.schemas.trim().split(/[\s,]+/);
+      }
       // Look up headers parameter
       options.headers = this.headers || {};
       // add support for plain text responses by default
@@ -150,6 +163,9 @@ element.
         // NXP-18425: send also header with dot separator for compat with < 7.10-HF01
         options.headers['X-NXenrichers.' + this.enrichersEntity] = this.enrichers;
       }
+
+      // resolve with full response to skip default unmarshallers
+      options.resolveWithFullResponse = true;
 
       var params = this.params || {};
       return this.$.nx.request().then(function(request) {
@@ -172,6 +188,9 @@ element.
         .queryParams(params)
         .repositoryName(this._request._baseOptions.repositoryName === 'default' ? undefined : this._request._baseOptions.repositoryName)
         .execute(options)
+        .then(function(response) {
+          return response.json();
+        })
         .then(function(data) {
           this.fire('response', {response: data});
           this.response = data;

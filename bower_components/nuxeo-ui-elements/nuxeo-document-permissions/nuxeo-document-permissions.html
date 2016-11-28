@@ -1,4 +1,5 @@
 <!--
+@license
 (C) Copyright 2015 Nuxeo SA (http://nuxeo.com/) and others.
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -11,10 +12,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Contributors:
-  Thomas Roger <troger@nuxeo.com>
-  Nelson Silva <nsilva@nuxeo.com>
 -->
 <link rel="import" href="../../polymer/polymer.html">
 <link rel="import" href="../../paper-styles/paper-styles.html">
@@ -40,7 +37,8 @@ Contributors:
 
 <!--
 An element providing document permissions management
-`nuxeo-document-permissions` permissions management.
+
+    <nuxeo-document-permissions doc-path="/default-domain"></nuxeo-document-permissions>
 
 @group Nuxeo UI
 @element nuxeo-document-permissions
@@ -48,6 +46,88 @@ An element providing document permissions management
 -->
 <dom-module id="nuxeo-document-permissions">
   <template>
+
+    <style>
+      .bubbleBox {
+        background-color: #fff;
+        box-shadow: 0 0 1px rgba(0, 0, 0, 0.2);
+        display: block;
+        margin: 0 1em 1em 0;
+        padding: 0 1em 1em;
+      }
+      .bubbleHeader {
+        border-color: #e6e9ef;
+        border-style: none none solid;
+        border-width: 1px;
+        margin: 0 0 1em;
+        overflow: hidden;
+        padding: 0.8em 0;
+        white-space: nowrap;
+      }
+      .bubbleHeader h3 {
+        float: left;
+        color: #213f7d;
+        font-weight: bold;
+        line-height: normal;
+        border: 0;
+        display: inline-block;
+        margin: 0;
+        padding: 0.3em 0;
+      }
+      .bubbleHeader paper-button {
+        float: right;
+        border: 1px solid #aaa;
+        font-weight: bold;
+        padding: 0.35em 0.8em;
+        text-transform: none;
+      }
+      .tag {
+        background: none #f3f6f9;
+        border-radius: 16px;
+        color: #333;
+        display: inline-block;
+        font-size: .8em;
+        line-height: inherit;
+        margin: 0 0.3em 0.5em 0;
+        padding: 0.1em 0.8em 0.2em;
+        text-decoration: none;
+        transition: none;
+      }
+      input {
+        width: 100%;
+        line-height: 1.4em;
+        padding: 0.5em;
+      }
+      .tips {
+        border: 1px solid #e6e9ef;
+        border-radius: 3px;
+        box-shadow: none;
+        color: #9a9a9a;
+        display: block;
+        margin: 0.1em 0 0.5em;
+        padding: 0.8em;
+        text-align: center;
+      }
+      .label, .chip {
+        background-color: #7e90a5;
+        border-radius: 3px;
+        color: #fff;
+        font-size: 0.9em;
+        font-weight: bold;
+        line-height: 130%;
+        margin: 0 0.2em 0.2em 0;
+        padding: 0.06em 0.3em;
+        text-transform: uppercase;
+        vertical-align: baseline;
+        white-space: nowrap;
+      }
+      .required::after {
+        content: '*';
+        color: red;
+      }
+
+    </style>
+
     <paper-toast id="toast"></paper-toast>
 
     <nuxeo-document id="doc" auto doc-id="{{docId}}" doc-path="{{docPath}}" response="{{doc}}"
@@ -56,7 +136,7 @@ An element providing document permissions management
     <!-- Local permissions -->
     <div class="bubbleBox">
       <div class="bubbleHeader jsLocalPermissions">
-        <h3>[[i18n('label.permissions.locallyDefined', 'Permissions defined locally')]]</h3>
+        <h3>[[i18n('documentPermissions.locallyDefined', 'Permissions defined locally')]]</h3>
         <template is="dom-if" if="[[_hasPermission(doc,'Everything')]]">
           <nuxeo-popup-permission doc-id="{{doc.uid}}"
             user-visible-permissions="{{doc.contextParameters.userVisiblePermissions}}">
@@ -66,7 +146,7 @@ An element providing document permissions management
       <div>
         <nuxeo-document-acl-table doc="[[doc]]" acl-filter="_excludeInheritedAcls" ace-filter="_excludeExternalUserAces"
           show-actions="[[_hasPermission(doc,'Everything')]]">
-          <p class="emptyResult">[[i18n('label.permissions.noLocalPermissions', 'There is no local permission.')]]</p>
+          <p class="emptyResult">[[i18n('documentPermissions.noLocalPermissions', 'There is no local permission.')]]</p>
         </nuxeo-document-acl-table>
       </div>
     </div>
@@ -76,25 +156,25 @@ An element providing document permissions management
       <div class="bubbleHeader">
         <template is="dom-if" if="[[_hasPermission(doc,'Everything')]]">
           <template is="dom-if" if="[[!_empty(inheritedAces)]]">
-            <paper-button id="block" on-click="blockInheritance">[[i18n('label.permissions.block', 'Block')]]</paper-button>
+            <paper-button id="block" on-click="blockInheritance">[[i18n('documentPermissions.block', 'Block')]]</paper-button>
           </template>
           <template is="dom-if" if="[[_empty(inheritedAces)]]">
-            <paper-button id="unblock" on-click="unblockInheritance">[[i18n('label.permissions.unblock', 'Unblock')]]</paper-button>
+            <paper-button id="unblock" on-click="unblockInheritance">[[i18n('documentPermissions.unblock', 'Unblock')]]</paper-button>
           </template>
         </template>
 
-        <h3>[[i18n('label.permissions.inherited', 'Permissions inherited from upper levels')]]</h3>
+        <h3>[[i18n('documentPermissions.inherited', 'Permissions inherited from upper levels')]]</h3>
         <template is="dom-if" if="[[_empty(inheritedAces)]]">
-          <span class="label label-warning">[[i18n('label.permissions.blocked', 'Blocked')]]</span>
+          <span class="label label-warning">[[i18n('documentPermissions.blocked', 'Blocked')]]</span>
         </template>
       </div>
       <div>
         <div class="tips" hidden$="[[_empty(inheritedAces)]]">
-          [[i18n('label.permissions.blockDescription', 'If you want to explicitly control the access to this document you can block the permissions inheritance. Any change made on parent document will not affect the access conditions to this document. You and the administrators will be added to local permissions.')]]
+          [[i18n('documentPermissions.blockDescription', 'If you want to explicitly control the access to this document you can block the permissions inheritance. Any change made on parent document will not affect the access conditions to this document. You and the administrators will be added to local permissions.')]]
         </div>
         <nuxeo-document-acl-table doc="[[doc]]" aces="{{inheritedAces}}" acl-filter="_onlyInheritedAcls" show-actions="false">
           <p class="emptyResult">
-            [[i18n('label.permissions.noInheritedText', 'Only local permissions are applied. Unblock to restore the permissions inheritance from upper levels.')]]
+            [[i18n('documentPermissions.noInheritedText', 'Only local permissions are applied. Unblock to restore the permissions inheritance from upper levels.')]]
           </p>
         </nuxeo-document-acl-table>
       </div>
@@ -103,7 +183,7 @@ An element providing document permissions management
     <!-- External users permissions -->
     <div class="bubbleBox">
       <div class="bubbleHeader">
-        <h3>[[i18n('label.permissions.external', 'Permissions Assigned to External Users')]]</h3>
+        <h3>[[i18n('documentPermissions.external', 'Permissions Assigned to External Users')]]</h3>
         <template is="dom-if" if="[[_hasPermission(doc, 'Everything')]]">
           <nuxeo-popup-permission doc-id="{{doc.uid}}"
             user-visible-permissions="{{doc.contextParameters.userVisiblePermissions}}"
@@ -111,13 +191,13 @@ An element providing document permissions management
         </template>
       </div>
       <div class="tips">
-        [[i18n('label.permissions.externalDescription', 'Sharing to external users does not create new user accounts. External users are provided a link to access this document.')]]
+        [[i18n('documentPermissions.externalDescription', 'Sharing to external users does not create new user accounts. External users are provided a link to access this document.')]]
       </div>
-      <nuxeo-document-acl-table doc="[[doc]]" aces="[[externalAces]]" ace-filter="_onlyExternalUserAces"
+      <nuxeo-document-acl-table doc="[[doc]]" ace-filter="_onlyExternalUserAces"
         acl-filter="_excludeInheritedAcls"
         show-actions="[[_hasPermission(doc,'Everything')]]"
         share-with-external="true">
-        <p class="emptyResult">[[i18n('label.permissions.noExternalPermission', 'The document is not shared with any external user.')]]</p>
+        <p class="emptyResult">[[i18n('documentPermissions.noExternalPermission', 'The document is not shared with any external user.')]]</p>
       </nuxeo-document-acl-table>
     </div>
 
@@ -169,25 +249,25 @@ An element providing document permissions management
     },
 
     onACECreated: function() {
-      this.$.toast.text = this.i18n('label.permissions.permissionCreated', 'Permission Created');
+      this.$.toast.text = this.i18n('documentPermissions.permissionCreated', 'Permission Created');
       this.$.toast.show();
       this.refresh();
     },
 
     onACEUpdated: function() {
-      this.$.toast.text = this.i18n('label.permissions.permissionUpdated', 'Permission Updated');
+      this.$.toast.text = this.i18n('documentPermissions.permissionUpdated', 'Permission Updated');
       this.$.toast.show();
       this.refresh();
     },
 
     onACEDeleted: function() {
-      this.$.toast.text = this.i18n('label.permissions.permissionDeleted', 'Permission Deleted');
+      this.$.toast.text = this.i18n('documentPermissions.permissionDeleted', 'Permission Deleted');
       this.$.toast.show();
       this.refresh();
     },
 
     onNotification: function() {
-      this.$.toast.text = this.i18n('label.permissions.permissionNotificationSent', 'Notification Email Sent');
+      this.$.toast.text = this.i18n('documentPermissions.permissionNotificationSent', 'Notification Email Sent');
       this.$.toast.show();
     },
 

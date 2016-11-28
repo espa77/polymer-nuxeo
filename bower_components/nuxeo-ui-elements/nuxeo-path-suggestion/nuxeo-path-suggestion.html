@@ -1,4 +1,5 @@
 <!--
+@license
 (C) Copyright 2015 Nuxeo SA (http://nuxeo.com/) and contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,9 +13,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Contributors:
-  Gabriel Barata <gbarata@nuxeo.com>
 -->
 <link rel="import" href="../../paper-typeahead/paper-typeahead.html">
 <link rel="import" href="../../nuxeo-elements/nuxeo-document.html">
@@ -55,6 +53,10 @@ Custom property | Description | Default
      @apply(--nuxeo-path-suggestion-result);
      };
     }
+    paper-typeahead:focus {
+      outline: none;
+      @apply(--nuxeo-path-suggestion-focus);
+    }
   </style>
   <template>
     <nuxeo-page-provider id="provider"
@@ -70,7 +72,9 @@ Custom property | Description | Default
                      no-label-float="[[noLabelFloat]]"
                      allowed-pattern="[[allowedPattern]]"
                      auto-validate="[[autoValidate]]"
-                     on-focus="_onFocus"></paper-typeahead>
+                     on-focus="_onFocus"
+                     disabled$="[[disabled]]"
+                     always-float-label="[[alwaysFloatLabel]]"></paper-typeahead>
   </template>
   <script>
     Polymer({
@@ -107,6 +111,11 @@ Custom property | Description | Default
           value: false
         },
 
+        alwaysFloatLabel: {
+          type: Boolean,
+          value: false
+        },
+
         autoValidate: {
           type: Boolean,
           value: true
@@ -115,6 +124,12 @@ Custom property | Description | Default
         allowedPattern: {
           type: String,
           value: '[^\(\)\\\+\*\%]'
+        },
+
+        disabled: {
+          type: Boolean,
+          observer: '_disabledChanged',
+          reflectToAttribute: true
         }
       },
 
@@ -145,7 +160,7 @@ Custom property | Description | Default
       },
 
       _valueChanged: function() {
-        if(this.value) {
+        if(this.value && !this.disabled) {
           var idx = this.value.lastIndexOf('/');
           if (idx > -1) {
             var newParentPath = (idx == 0 ? '/' : this.value.substring(0, idx));
@@ -161,6 +176,11 @@ Custom property | Description | Default
           this.$.parent.docPath = newParentPath;
           return this.$.parent.get().then(function(response) {
             this.parent = response;
+          }.bind(this)).catch(function(error) {
+            if (!(error.code === 'org.nuxeo.ecm.core.api.DocumentNotFoundException' &&
+                  error.message === newParentPath)) {
+              throw error;
+            }
           }.bind(this));
         } else {
           return new Promise(function(resolve) {
@@ -175,6 +195,12 @@ Custom property | Description | Default
                      'AND ecm:isCheckedInVersion = 0 AND ecm:currentLifeCycleState != \'deleted\'';
         this.params = [term+'%'];
         return this.$.provider.fetch();
+      },
+
+      _disabledChanged: function() {
+        if (!this.disabled) {
+          this._valueChanged();
+        }
       }
 
     });

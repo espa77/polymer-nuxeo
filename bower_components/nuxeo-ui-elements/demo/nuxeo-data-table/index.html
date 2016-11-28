@@ -11,9 +11,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Contributors:
-    Guillaume Renard <grenard@nuxeo.com>
 -->
 <html>
 <head>
@@ -23,10 +20,10 @@ Contributors:
   <script src="../../../webcomponentsjs/webcomponents-lite.js"></script>
   <link rel="import" href="../../../polymer/polymer.html">
   <link rel="import" href="../../../nuxeo-elements/nuxeo-page-provider.html">
-  <link rel="import" href="../../../nuxeo-elements/widgets/nuxeo-select2-behavior.html"/>
-  <link rel="import" href="../../../nuxeo-elements/widgets/nuxeo-select2.html"/>
+  <link rel="import" href="../../widgets/nuxeo-select2-behavior.html"/>
+  <link rel="import" href="../../widgets/nuxeo-select2.html"/>
   <link rel="import" href="../../nuxeo-aggregation/nuxeo-dropdown-aggregation.html">
-  <link rel="import" href="../../nuxeo-data-table/nuxeo-data-table.html">
+  <link rel="import" href="../../nuxeo-data-table/iron-data-table.html">
   <link rel="stylesheet" href="../../../select2/select2.css">
 
 
@@ -41,7 +38,7 @@ Contributors:
 
       nuxeo-data-table {
         background-color: #fff;
-        height: calc(100vh - 64px);
+        height: 100%;
       }
 
       nuxeo-dropdown-aggregation {
@@ -94,8 +91,8 @@ Contributors:
     <div class="content-view">
 
       <nuxeo-connection url="http://webui.demo.nuxeo.com/nuxeo"
-        username="Administrator"
-        password="Administrator">
+        username="demo"
+        password="demo">
       </nuxeo-connection>
 
       <nuxeo-page-provider id="cvProvider" auto

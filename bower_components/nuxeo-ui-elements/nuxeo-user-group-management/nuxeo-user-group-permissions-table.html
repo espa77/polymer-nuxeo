@@ -1,4 +1,5 @@
 <!--
+@license
 (C) Copyright 2016 Nuxeo SA (http://nuxeo.com/) and contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,15 +13,13 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Contributors:
-  Andre Justo <ajusto@nuxeo.com>
 -->
 <link rel="import" href="../../polymer/polymer.html">
 <link rel="import" href="../../paper-button/paper-button.html">
 <link rel="import" href="../../paper-dialog/paper-dialog.html">
 <link rel="import" href="../../paper-icon-button/paper-icon-button.html">
 <link rel="import" href="../../nuxeo-elements/nuxeo-operation.html">
+<link rel="import" href="../widgets/nuxeo-tag.html">
 <script src="../../moment/moment.js"></script>
 
 <!--
@@ -45,13 +44,44 @@ Used by `nuxeo-user-group-management`
         display: block;
       }
 
-      .table {
-        border: 1px solid #e7e7e7;
+      paper-button:hover {
+        @apply(--nx-button-hover);
+      }
+
+      paper-button.primary {
+        @apply(--nx-button-primary);
+      }
+
+      paper-button.primary:hover,
+      paper-button.primary:focus {
+        @apply(--nx-button-primary-hover);
+      }
+
+      .table-header {
+        @apply(--layout-horizontal);
+        @apply(--layout-center);
+        background-color: var(--nuxeo-table-header-background, #fafafa);
+        color: var(--nuxeo-table-header-titles, rgba(0, 0, 0, 0.54));
+        font-size: 12px;
+        font-weight: 400;
+        height: 4em;
+        padding: 0 0 0 12px;
       }
 
       .table-row {
         @apply(--layout-horizontal);
-        border-bottom: 1px solid #e7e7e7;
+        @apply(--layout-center);
+        padding: 12px 0 12px 12px;
+        border-bottom: 1px solid var(--nuxeo-border, #eee);
+        cursor: pointer;
+      }
+
+      .table-row:hover {
+        background: var(--nuxeo-container-hover, #fafafa);
+      }
+
+      .table {
+        border: 1px solid var(--nuxeo-border, #eee);
       }
 
       .table-row:last-of-type {
@@ -90,6 +120,15 @@ Used by `nuxeo-user-group-management`
         font-size: 0.8em;
         margin-top: 5px;
       }
+
+      .buttons {
+        @apply(--buttons-bar);
+      }
+
+      .confirm {
+        padding: 2em;
+        font-size: 1.1em;
+      }
     </style>
 
     <nuxeo-operation id="permissions"
@@ -100,12 +139,12 @@ Used by `nuxeo-user-group-management`
 
     <nuxeo-pagination-controls page="{{_currentPage}}" number-of-pages="[[_numberOfPages]]"></nuxeo-pagination-controls>
     <div class="table">
-      <div class="table-row table-headers">
-        <div class="flex-3">[[i18n('label.permissions.on', 'On')]]</div>
+      <div class="table-header">
+        <div class="flex-3">[[i18n('userGroupPermissions.on', 'On')]]</div>
         <div class="flex-6 layout horizontal">
-          <div class="flex-2">[[i18n('label.permissions.right', 'Right')]]</div>
-          <div class="flex-2">[[i18n('label.permissions.timeFrame', 'Time Frame')]]</div>
-          <div class="flex-2">[[i18n('label.permissions.grantedBy', 'Granted by')]]</div>
+          <div class="flex-2">[[i18n('userGroupPermissions.right', 'Right')]]</div>
+          <div class="flex-2">[[i18n('userGroupPermissions.timeFrame', 'Time Frame')]]</div>
+          <div class="flex-2">[[i18n('userGroupPermissions.grantedBy', 'Granted by')]]</div>
           <div class="table-actions"></div>
         </div>
       </div>
@@ -127,18 +166,17 @@ Used by `nuxeo-user-group-management`
                   </div>
                   <div class="flex-2">
                     <template is="dom-if" if=[[ace.creator]]>
-                      <span class="tag flex">
-                        <iron-icon icon="social:people"></iron-icon>
-                        [[ace.creator]]
-                      </span>
+                      <nuxeo-tag icon="social:people">[[ace.creator]]</nuxeo-tag>
                     </template>
                   </div>
                   <div class="table-actions">
-                    <paper-icon-button icon="icons:delete"
-                                     title="[[i18n('label.permissions.delete', 'Delete permission')]]"
-                                     on-tap="_toggleDialog"
-                                     hidden$="[[!_canDelete(ace)]]">
-                    </paper-icon-button>
+                    <template is="dom-if" if=[[!readonly]]>
+                      <paper-icon-button icon="icons:delete" noink
+                                       title="[[i18n('userGroupPermissions.delete.button', 'Delete permission')]]"
+                                       on-tap="_toggleDialog"
+                                       hidden$="[[!_canDelete(ace)]]">
+                      </paper-icon-button>
+                    </template>
                   </div>
                 </div>
               </template>
@@ -149,7 +187,7 @@ Used by `nuxeo-user-group-management`
       <template is="dom-if" if=[[empty]]>
         <div class="table-row">
           <div>
-            [[i18n('label.permissions.noPermissions', '{0} does not have permissions.', entity)]]
+            [[i18n('userGroupPermissions.noPermissions', '{0} does not have permissions.', entity)]]
           </div>
         </div>
       </template>
@@ -157,12 +195,14 @@ Used by `nuxeo-user-group-management`
     <nuxeo-pagination-controls page="{{_currentPage}}" number-of-pages="[[_numberOfPages]]"></nuxeo-pagination-controls>
 
     <paper-dialog id="dialog" modal class="vertical layout">
-      <div class="horizontal layout">
-        <p>[[i18n('label.permissions.deleteConfirm', 'Do you really want to delete this permission?')]]</p>
+      <div class="horizontal layout confirm">
+        <p>[[i18n('userGroupPermissions.delete.confirm', 'Do you really want to delete this permission?')]]</p>
       </div>
       <div class="buttons horizontal end-justified layout">
-        <paper-button dialog-dismiss>[[i18n('label.no', 'No')]]</paper-button>
-        <paper-button dialog-confirm on-tap="_deleteAce">[[i18n('label.yes', 'Yes')]]</paper-button>
+        <div class="flex start-justified">
+          <paper-button noink dialog-dismiss>[[i18n('label.no', 'No')]]</paper-button>
+        </div>
+        <paper-button class="primary" noink dialog-confirm on-tap="_deleteAce">[[i18n('label.yes', 'Yes')]]</paper-button>
       </div>
     </paper-dialog>
   </template>
@@ -202,7 +242,13 @@ Used by `nuxeo-user-group-management`
             value: 25
           },
 
-          _numberOfPages: Number
+          _numberOfPages: Number,
+
+          readonly: {
+            type: Boolean,
+            value: false,
+            reflectToAttribute: true
+          }
         },
 
         observers: [
@@ -261,10 +307,10 @@ Used by `nuxeo-user-group-management`
           var begin = ace.begin || null;
           var end = ace.end || null;
           var format = 'D MMM YYYY';
-          var sinceStr = this.i18n('label.permissions.since', 'Since') + ' ';
-          var fromStr = this.i18n('label.permissions.from', 'From') + ' ';
-          var untilStr = this.i18n('label.permissions.until', 'Until') + ' ';
-          var untilMiddleStr = ' ' + this.i18n('label.permissions.untilMiddle', 'until') + ' ';
+          var sinceStr = this.i18n('userGroupPermissions.since', 'Since') + ' ';
+          var fromStr = this.i18n('userGroupPermissions.from', 'From') + ' ';
+          var untilStr = this.i18n('userGroupPermissions.until', 'Until') + ' ';
+          var untilMiddleStr = ' ' + this.i18n('userGroupPermissions.untilMiddle', 'until') + ' ';
           if (begin !== null && end === null) {
             return (now.isAfter(begin) ? sinceStr : fromStr) + moment(begin).format(format);
           } else if (begin === null && end !== null) {
@@ -272,7 +318,7 @@ Used by `nuxeo-user-group-management`
           } else if (begin !== null && end !== null) {
             return (now.isAfter(begin) ? sinceStr : fromStr) + moment(begin).format(format) + untilMiddleStr + moment(end).format(format);
           } else {
-            return this.i18n('label.permissions.permanent', 'Permanent');
+            return this.i18n('userGroupPermissions.permanent', 'Permanent');
           }
         },
 

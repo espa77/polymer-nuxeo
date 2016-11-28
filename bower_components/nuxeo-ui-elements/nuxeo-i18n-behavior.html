@@ -1,4 +1,5 @@
 <!--
+@license
 (C) Copyright 2016 Nuxeo SA (http://nuxeo.com/) and contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,23 +13,24 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Contributors:
-    Gabriel Barata <gbarata@nuxeo.com>
 -->
 <link rel="import" href="../polymer/polymer.html">
 <script src="nuxeo-i18n.js"></script>
 
-<!--
-`nuxeo-i18n-behavior`
-@group Nuxeo UI Elements
-@element nuxeo-i18n-behavior
--->
 <script>
   var Nuxeo = Nuxeo || {};
   (function () {
+
+    /**
+     * `Nuxeo.I18nBehavior` provides a `i18n` helper function for translations.
+     *
+     * @polymerBehavior Nuxeo.I18nBehavior
+     */
     Nuxeo.I18nBehavior = {
       properties: {
+        /**
+         * Returns the translation for the given key.
+         */
         i18n: {
           type: Function,
           notify: true,
@@ -39,9 +41,7 @@ Contributors:
       },
 
       attached: function() {
-        this.localeLoadedHandler = function(e) {
-          this.refresh_18n();
-        }.bind(this);
+        this.localeLoadedHandler = this.refresh_18n.bind(this);
         document.addEventListener('i18n-locale-loaded', this.localeLoadedHandler);
       },
 
@@ -50,6 +50,7 @@ Contributors:
       },
 
       refresh_18n: function() {
+        this.i18n = null;
         this.i18n = window.nuxeo.I18n.translate;
       }
     };

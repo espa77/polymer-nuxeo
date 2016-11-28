@@ -25,7 +25,8 @@
     "iron-form": "PolymerElements/iron-form#^1.1.4",
     "paper-dialog-scrollable": "PolymerElements/paper-dialog-scrollable#^1.1.5",
     "iron-image": "PolymerElements/iron-image#^1.2.5",
-    "nuxeo-ui-elements": "nuxeo/nuxeo-ui-elements#^0.2.0"
+    "nuxeo-ui-elements": "nuxeo/nuxeo-ui-elements#^0.2.0",
+    "nuxeo-web-ui": "nuxeo/nuxeo-web-ui#master"
   },
   "devDependencies": {
     "web-component-tester": "^4.0.0"

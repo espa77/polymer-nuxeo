@@ -1,4 +1,5 @@
 <!--
+@license
 (C) Copyright 2015 Nuxeo SA (http://nuxeo.com/) and contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,10 +13,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Contributors:
-  Guillaume Renard <grenard@nuxeo.com>
-  Andre Justo <ajusto@nuxeo.com>
 -->
 <!--
 <link rel="import" href="../../bower_components/polymer/polymer.html">
@@ -27,7 +24,35 @@ Contributors:
 <link rel="import" href="../nuxeo-page-provider-display-behavior.html">
 
 <!--
-`nuxeo-data-grid'
+An element to display page provider results as a grid with infinite scrolling.
+
+    <nuxeo-page-provider id="cvProvider" auto
+                         provider="default_search"
+                         page-size="40"
+                         enrichers="thumbnail"
+                         params='{"ecm_path": ["/default-domain/workspaces"]}'>
+    </nuxeo-page-provider>
+
+    <nuxeo-data-grid nx-provider="nxProvider" selection-enabled>
+      <template>
+        <div class="list-item-box vertical layout">
+          <div class="list-item-info horizontal layout center">
+            <div class="vertical layout center">
+              <img class="nxicon" src="[[_thumbnail(item)]]">
+            </div>
+            <span class="list-item-title">[[item.title]]</span>
+          </div>
+          <div class="list-item-detail">
+            <div class="layout center">
+              <span class="list-item-property">
+                [[item.type]]
+              </span>
+            </div>
+          </div>
+        </div>
+      </template>
+    </nuxeo-data-grid>
+
 @group Nuxeo UI
 @element nuxeo-data-grid
 -->
@@ -52,7 +77,7 @@ Contributors:
       }
 
       #scrollThreshold {
-        padding: 0 0 .8em;
+        padding: 0 0 3em;
       }
 
       ::content .grid-box {
@@ -134,17 +159,51 @@ Contributors:
         font-size: 1.5em;
       }
 
+      .filters {
+        margin: 1em 0 0 2.3em;
+      }
+
+      .filter {
+        display: inline-block;
+        background-color: var(--nuxeo-tag-background);
+        color: var(--nuxeo-tag-text);
+        padding: .2rem .4rem;
+        margin: 0 .3em .1em 0;
+        font-size: .8em;
+        border-radius: 2.5em;
+        line-height: initial;
+      }
+
+      .filter .remove:hover {
+        cursor: pointer;
+      }
+
     </style>
 
     <div id="container">
 
       <content select="nuxeo-selection-toolbar"></content>
 
+      <template is="dom-if" if="[[displayQuickFilters]]">
+        <nuxeo-quick-filters quick-filters="{{quickFilters}}" on-quick-filters-changed="_quickFilterChanged">
+        </nuxeo-quick-filters>
+      </template>
+
+      <div id="filters" class="filters">
+        <template is="dom-repeat" items="[[filters]]" as="filter">
+          <span class="tag filter">
+            [[filter.name]]: [[filter.value]]
+            <iron-icon icon="icons:clear" class="remove" on-tap="_removeFilter"></iron-icon>
+          </span>
+        </template>
+      </div>
+
       <iron-scroll-threshold id="scrollThreshold"
         lower-threshold="1000" class="loadable"
         on-lower-threshold="_loadMoreData">
         <div class="grid-ctn bubbleBoxes">
-          <iron-list id="list" scroll-target="scrollThreshold" grid selected-items="{{selectedItems}}">
+          <iron-list id="list" scroll-target="scrollThreshold" grid selected-item="{{selectedItem}}"
+            selected-items="{{selectedItems}}" selection-enabled>
           </iron-list>
         </div>
       </iron-scroll-threshold>
@@ -152,7 +211,7 @@ Contributors:
         <div class="emptyResult">[[_computedEmptyLabel]]</div>
       </template>
     </div>
-    <paper-spinner-lite active hidden=[[!loading]]></paper-spinner-lite>
+    <paper-spinner-lite active hidden$=[[!loading]]></paper-spinner-lite>
 
   </template>
   <script>
@@ -167,7 +226,10 @@ Contributors:
         ],
 
         properties: {
-
+          multiSelection: {
+            type: Boolean,
+            value: true
+          }
         },
 
         ready: function() {
@@ -185,9 +247,13 @@ Contributors:
             this.$.list.items = [];
             this._templateStamped = true;
           }
+        },
+
+        _removeFilter: function(e) {
+          this.fire('column-filter-changed', {value: '', filterBy: e.model.filter.path});
         }
 
-        });
+      });
     })();
   </script>
 

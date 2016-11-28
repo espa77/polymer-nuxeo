@@ -1,4 +1,5 @@
 <!--
+@license
 (C) Copyright 2016 Nuxeo SA (http://nuxeo.com/) and contributors.
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,18 +13,11 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
-
-Contributors:
-  Andre Justo <ajusto@nuxeo.com>
 -->
 <link rel="import" href="../../polymer/polymer.html">
 <link rel="import" href="../../iron-collapse/iron-collapse.html">
 
-<!--
-`nuxeo-tree-node`
-@group Nuxeo UI Elements
-@element nuxeo-tree-node
--->
+<!-- Part of `nuxeo-tree`-->
 <dom-module id="nuxeo-tree-node">
   <template>
     <style is="custom-style">
@@ -39,20 +33,18 @@ Contributors:
 
       ::content #content {
         position: relative;
+        margin: .1em 0 .3em;
+        line-height: 1.6em;
       }
 
       ::content #content > iron-icon {
         color: var(--nuxeo-tag-text);
-        width: 1.3rem;
+        width: 1.2rem;
       }
 
       ::content span iron-icon {
         width: .95rem;
         margin: 0 .1rem .3rem 0;
-      }
-
-      ::content .node-name.nuxeo-document-tree {
-        left: 1.5em;
       }
 
     </style>
@@ -112,6 +104,14 @@ Contributors:
           } else {
             this._fetchChildren();
             this.opened = true;
+          }
+        },
+
+        _selectNode: function(e) {
+          if (!e.detail.item) {
+            this.fire('select', {item: this.data});
+          } else {
+            this.fire('select', {item: e.detail.item});
           }
         },
 
@@ -196,6 +196,10 @@ Contributors:
 
         _setupToggleListener: function() {
           this._flushTemplates();
+          var selectElts = Polymer.dom(this).querySelector('#content').querySelectorAll('[select]');
+          for (var i = 0; i < selectElts.length; i++) {
+            this.listen(selectElts[i], 'tap', '_selectNode');
+          }
           var toggleEls = Polymer.dom(this).querySelector('#content').querySelectorAll('[toggle]');
           for (var i = 0; i < toggleEls.length; i++) {
             this.listen(toggleEls[i], 'tap', 'toggle');
@@ -229,6 +233,11 @@ Contributors:
             this._instance.notifyPath('opened', this.opened);
             this._setupToggleListener();
           }
+        },
+
+        removeSelf: function() {
+          this.remove();
+          return Promise.resolve();
         }
       });
     })();
