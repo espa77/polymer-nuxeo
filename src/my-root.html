@@ -303,9 +303,9 @@
                         }
                     }
                     if (success.srcElement.method === "get") {
-                        let count = responseObject.response.resultsCount;
-                        if (count > 1) {
-                            this.results = count;
+                        let resultsCount = responseObject.response.resultsCount;
+                        if (resultsCount > 1) {
+                            this.results = resultsCount;
                             this.$.contentsNumber.style.display = "flex";
                         } else {
                             this.$.contentsNumber.style.display = "none";
