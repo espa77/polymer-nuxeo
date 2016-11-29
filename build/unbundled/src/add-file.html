@@ -1,0 +1,59 @@
+<html><head><link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/iron-form/iron-form.html">
+<link rel="import" href="../bower_components/iron-input/iron-input.html">
+<link rel="import" href="../bower_components/paper-input/paper-input.html">
+<link rel="import" href="../bower_components/neon-animation/animations/scale-up-animation.html">
+<link rel="import" href="../bower_components/neon-animation/animations/fade-out-animation.html">
+<link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
+<link rel="import" href="../bower_components/nuxeo-elements/widgets/nuxeo-file.html">
+<link rel="import" href="shared-styles.html">
+
+</head><body><dom-module id="add-file">
+
+    <template>
+
+        <style include="shared-styles iron-flex iron-flex-alignment">
+            :host {
+                display: block;
+            }
+            #properties {
+                @apply(--layout-vertical);
+            }
+            paper-button.add-new {
+                margin: 2ch;
+            }
+        </style>
+
+        <div class="card">
+            <div class="title" id="fileUpload">New Document</div>
+            <form is="iron-form" id="form" content-type="application/json">
+                <h2>Upload a New Document to Nuxeo</h2>
+                <h3>Type: Document</h3>
+                <label>File Name:</label>
+                <input name="name" type="text" required="">
+                <div id="fileButtons">
+                    <paper-button class="add-new" raised="" on-tap="openProps">ADD PROPERTIES</paper-button>
+                    <paper-button class="add-new" raised="" on-tap="openFileAdd">ADD FILE(S)</paper-button>
+                </div>
+                <div id="properties">
+                    <template is="dom-if" if="[[showProperties]]">
+                        <label>Title:</label>
+                        <input name="title" type="text">
+                        <label>Description:</label>
+                        <input name="description" type="text">
+                    </template>
+                    <template is="dom-if" if="[[showFileAdd]]">
+                        <label>Append File(s):</label>
+                        <nuxeo-file id="test" value="{{batch}}" filetypes="{{files}}" multiple=""></nuxeo-file>
+                    </template>
+                </div>
+                <paper-button class="add-new" raised="" on-tap="submitDocumentForm">CREATE</paper-button>
+            </form>
+        </div>
+    </template>
+
+    <script>Polymer({is:"add-file",properties:{showProperties:{type:Boolean,value:!1},showFileAdd:{type:Boolean,value:!1},documentData:{type:Object,notify:!0},batch:{type:String,observer:"_mangeFileUpload"},batchId:{type:Object},fileTypes:{type:Array,observer:"_manageDocumentType"}},openProps:function(){this.showProperties=!0},openFileAdd:function(){this.showFileAdd=!0},_mangeFileUpload:function(e){this.batchId=e},_manageDocumentType:function(e,t,i){},submitDocumentForm:function(){if(!this.$.form.name.value)return alert("please provide a name for this new file"),!1;var e=this.$.form,t=this.batchId,i={"entity-type":"document",name:e.name.value,properties:{"file:content":t},type:"File"};e.title&&(i.properties["dc:title"]=e.title.value),e.description&&(i.properties["dc:description"]=e.description.value),i=JSON.stringify(i),this.documentData=i,this.$.form.reset()}});</script>
+
+</dom-module></body></html>

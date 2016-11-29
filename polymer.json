@@ -3,8 +3,10 @@
   "shell": "src/my-app.html",
   "fragments": [
     "src/my-root.html",
-    "src/my-add-file.html",
-    "src/my-add-folder.html",
+    "src/add-file.html",
+    "src/add-folder.html",
+    "src/file-viewer.html",
+    "src/collection-viewer.html",
     "src/my-view404.html"
   ],
   "sourceGlobs": [
