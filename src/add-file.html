@@ -24,9 +24,12 @@
             paper-button.add-new {
                 margin: 2ch;
             }
+            #fileCreate {
+                margin-bottom: -2vh;
+            }
         </style>
 
-        <div class="card">
+
             <div class="title" id="fileUpload">New Document</div>
             <form is="iron-form" id="form" content-type="application/json">
                 <h2>Upload a New Document to Nuxeo</h2>
@@ -46,12 +49,11 @@
                     </template>
                     <template is="dom-if" if="[[showFileAdd]]">
                         <label>Append File(s):</label>
-                        <nuxeo-file id="test" value="{{batch}}" fileTypes="{{files}}" multiple></nuxeo-file>
+                        <nuxeo-file value="{{batch}}" files="{{files}}" multiple></nuxeo-file>
                     </template>
                 </div>
-                <paper-button class="add-new" raised on-tap="submitDocumentForm">CREATE</paper-button>
+                <paper-button id="fileCreate" class="add-new" raised on-tap="submitDocumentForm">CREATE</paper-button>
             </form>
-        </div>
     </template>
 
     <script>
@@ -59,6 +61,12 @@
         Polymer({
 
             is: 'add-file',
+
+            behaviors: [Nuxeo.UploaderBehavior],
+
+            observers: [
+                '_manageDocumentType(files.splices)'
+            ],
 
             properties: {
                 showProperties: {
@@ -80,9 +88,15 @@
                 batchId: {
                     type: Object
                 },
-                fileTypes: {
-                    type: Array,
-                    observer: '_manageDocumentType'
+                files: {
+                    type: Array
+                },
+                mimeType: {
+                    type: String,
+                    observer: '_documentTypePicker'
+                },
+                docType: {
+                    type: String
                 }
             },
             openProps: function() {
@@ -94,21 +108,30 @@
             _mangeFileUpload: function(data){
                 this.batchId = data;
             },
-            _manageDocumentType: function(a, b, c) {
-                debugger;
+            _manageDocumentType: function(file) {
+                if (file) {
+                    this.mimeType = file.indexSplices["0"].object["0"].type;
+                }
             },
-            submitDocumentForm: function() {
-                debugger;
+            _documentTypePicker: function(mimeType) {
+                let docType = mimeType.split('/').shift();
+                if (docType === "image") {
+                    this.docType = "Picture";
+                }
+            },
+
+            submitDocumentForm: function(a,b) {
                 if (this.$.form.name.value) {
-                    var form = this.$.form,
+                    let form = this.$.form,
                         batch = this.batchId,
-                        nuxeoData = {
+                        docType = this.docType;
+                    var nuxeoData = {
                             "entity-type": "document",
                             "name": form.name.value,
                             "properties": {
                                 "file:content": batch
                             },
-                            "type": "File"
+                            "type": docType
                             };
                     if (form.title) {
                         nuxeoData.properties["dc:title"] = form.title.value;

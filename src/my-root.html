@@ -385,7 +385,8 @@
                 if (path === "") {
                     return "root";
                 }
-                path = path.replace('/', '');
+                path = path.split("/");
+                path = path.pop();
                 return path;
             },
 
