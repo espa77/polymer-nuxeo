@@ -7,7 +7,7 @@
 <link rel="import" href="../bower_components/paper-dialog/paper-dialog.html">
 <link rel="import" href="../bower_components/iron-flex-layout/iron-flex-layout-classes.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
-<link rel="import" href="shared-styles.html">
+<link rel="import" href="../styles/shared-styles.html">
 
 <dom-module id="add-folder">
 
@@ -72,14 +72,13 @@
             },
             submitFolderForm: function() {
                 if (this.$.form.name.value) {
-
-                    let form = this.$.form,
-                            nuxeoData = {
-                                "entity-type": "document",
-                                "name": form.name.value,
-                                "properties": {},
-                                "type": "Folder"
-                            };
+                    var form = this.$.form,
+                        nuxeoData = {
+                            "entity-type": "document",
+                            "name": form.name.value,
+                            "properties": {},
+                            "type": "Folder"
+                        };
                     if (form.title) {
                         nuxeoData.properties["dc:title"] = form.title.value;
                     }

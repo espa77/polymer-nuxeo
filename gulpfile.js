@@ -1,85 +1,255 @@
-/**
- * @license
- * Copyright (c) 2016 The Polymer Project Authors. All rights reserved.
- * This code may only be used under the BSD style license found at http://polymer.github.io/LICENSE.txt
- * The complete set of authors may be found at http://polymer.github.io/AUTHORS.txt
- * The complete set of contributors may be found at http://polymer.github.io/CONTRIBUTORS.txt
- * Code distributed by Google as part of the polymer project is also
- * subject to an additional IP rights grant found at http://polymer.github.io/PATENTS.txt
- */
-
 'use strict';
 
-const path = require('path');
-const gulp = require('gulp');
-const gulpif = require('gulp-if');
+// Include Gulp & Tools We'll Use
+var gulp = require('gulp');
+var $ = require('gulp-load-plugins')();
+var del = require('del');
+var runSequence = require('run-sequence');
+var browserSync = require('browser-sync');
+var reload = browserSync.reload;
+var merge = require('merge-stream');
+var path = require('path');
+var fs = require('fs');
+var glob = require('glob');
+var historyApiFallback = require('connect-history-api-fallback');
 
-// Got problems? Try logging 'em
-// const logging = require('plylog');
-// logging.setVerbose();
+var AUTOPREFIXER_BROWSERS = [
+    'ie >= 10',
+    'ie_mob >= 10',
+    'ff >= 30',
+    'chrome >= 34',
+    'safari >= 7',
+    'opera >= 23',
+    'ios >= 7',
+    'android >= 4.4',
+    'bb >= 10'
+];
 
-// !!! IMPORTANT !!! //
-// Keep the global.config above any of the gulp-tasks that depend on it
-global.config = {
-  polymerJsonPath: path.join(process.cwd(), 'polymer.json'),
-  build: {
-    rootDirectory: 'build',
-    bundledDirectory: 'bundled',
-    unbundledDirectory: 'unbundled',
-    // Accepts either 'bundled', 'unbundled', or 'both'
-    // A bundled version will be vulcanized and sharded. An unbundled version
-    // will not have its files combined (this is for projects using HTTP/2
-    // server push). Using the 'both' option will create two output projects,
-    // one for bundled and one for unbundled
-    bundleType: 'both'
-  },
-  // Path to your service worker, relative to the build root directory
-  serviceWorkerPath: 'service-worker.js',
-  // Service Worker precache options based on
-  // https://github.com/GoogleChrome/sw-precache#options-parameter
-  swPrecacheConfig: {
-    navigateFallback: '/index.html'
-  }
+var APP = 'src/main/app', DIST = 'target/classes/nuxeo.war/polymerui';
+
+var styleTask = function (stylesPath, srcs) {
+    return gulp.src(srcs.map(function(src) {
+        return path.join(APP, stylesPath, src);
+    }))
+        .pipe($.changed(stylesPath, {extension: '.css'}))
+        .pipe($.autoprefixer(AUTOPREFIXER_BROWSERS))
+        .pipe(gulp.dest('.tmp/' + stylesPath))
+        .pipe($.if('*.css', $.minifyCss()))
+        .pipe(gulp.dest(DIST + '/' + stylesPath))
+        .pipe($.size({title: stylesPath}));
 };
 
-// Add your own custom gulp tasks to the gulp-tasks directory
-// A few sample tasks are provided for you
-// A task should return either a WriteableStream or a Promise
-const clean = require('./gulp-tasks/clean.js');
-const images = require('./gulp-tasks/images.js');
-const uglify = require('gulp-uglify');
-const project = require('./gulp-tasks/project.js');
+// Compile and Automatically Prefix Stylesheets
+gulp.task('styles', function () {
+    return styleTask('styles', ['**/*.css']);
+});
 
-// The source task will split all of your source files into one
-// big ReadableStream. Source files are those in src/** as well as anything
-// added to the sourceGlobs property of polymer.json.
-// Because most HTML Imports contain inline CSS and JS, those inline resources
-// will be split out into temporary files. You can use gulpif to filter files
-// out of the stream and run them through specific tasks. An example is provided
-// which filters all images and runs them through imagemin
-function source() {
-  return project.splitSource()
-    // Add your own build tasks here!
-    .pipe(gulpif('**/*.{png,gif,jpg,svg}', images.minify()))
-    // .pipe(gulpif('**/*.js', uglify()))
-    .pipe(project.rejoin()); // Call rejoin when you're finished
-}
+gulp.task('elements', function () {
+    return styleTask('src', ['**/*.css']);
+});
 
-// The dependencies task will split all of your bower_components files into one
-// big ReadableStream
-// You probably don't need to do anything to your dependencies but it's here in
-// case you need it :)
-function dependencies() {
-  return project.splitDependencies()
-    // .pipe(gulpif('**/*.js', uglify()))
-    .pipe(project.rejoin());
-}
+// Lint JavaScript
+gulp.task('jshint', function () {
+    return gulp.src([
+        APP + '/scripts/app.js',
+        APP + '/src/**/*.js',
+        APP + '/src/**/*.html'
+    ])
+        .pipe(reload({stream: true, once: true}))
+        .pipe($.jshint.extract()) // Extract JS from .html files
+        .pipe($.jshint())
+        .pipe($.jshint.reporter('jshint-stylish'))
+        .pipe($.if(!browserSync.active, $.jshint.reporter('fail')));
+});
 
-// Clean the build directory, split all source and dependency files into streams
-// and process them, and output bundled and unbundled versions of the project
-// with their own service workers
-gulp.task('default', gulp.series([
-  clean.build,
-  project.merge(source, dependencies),
-  project.serviceWorker
-]));
+// Optimize Images
+gulp.task('images', function () {
+    return gulp.src(APP + '/images/**/*')
+        .pipe($.imagemin({
+            progressive: true,
+            interlaced: true
+        }))
+        .pipe(gulp.dest(DIST + '/images'))
+        .pipe($.size({title: 'images'}));
+});
+
+// Copy All Files At The Root Level (app)
+gulp.task('copy', function () {
+    var app = gulp.src([APP + '/*'], {
+        dot: true
+    }).pipe(gulp.dest(DIST));
+
+
+    var bower = gulp.src([
+        'bower_components/**/*'
+    ]).pipe(gulp.dest(DIST + '/bower_components'));
+
+    var elements = gulp.src([APP + '/src/**/*.html'])
+        .pipe(gulp.dest(DIST + '/src'));
+
+    // var swBootstrap = gulp.src(['bower_components/platinum-sw/bootstrap/*.js'])
+    //  .pipe(gulp.dest('dist/elements/bootstrap'));
+    //
+    // var swToolbox = gulp.src(['bower_components/sw-toolbox/*.js'])
+    //    .pipe(gulp.dest('dist/sw-toolbox'));
+
+    var vulcanized = gulp.src([APP + '/src/elements.html'])
+        .pipe($.rename('elements.vulcanized.html'))
+        .pipe(gulp.dest(DIST + '/src'));
+
+    return merge(app, bower, elements, vulcanized)
+        .pipe($.size({title: 'copy'}));
+});
+
+// Copy Web Fonts To Dist
+gulp.task('fonts', function () {
+    return gulp.src([APP + '/fonts/**'])
+        .pipe(gulp.dest(DIST + '/fonts'))
+        .pipe($.size({title: 'fonts'}));
+});
+
+// Scan Your HTML For Assets & Optimize Them
+gulp.task('html', function () {
+    var assets = $.useref.assets({searchPath: ['.tmp', APP, DIST]});
+
+    return gulp.src([APP +'/**/*.html', '!' + APP + '/{elements,test}/**/*.html'])
+    // Replace path for vulcanized assets
+        .pipe($.if('*.html', $.replace('src/elements.html', 'src/elements.vulcanized.html')))
+        .pipe(assets)
+        // Concatenate And Minify JavaScript
+        .pipe($.if('*.js', $.uglify({preserveComments: 'some'})))
+        // Concatenate And Minify Styles
+        // In case you are still using useref build blocks
+        .pipe($.if('*.css', $.minifyCss()))
+        .pipe(assets.restore())
+        .pipe($.useref())
+        // Minify Any HTML
+        .pipe($.if('*.html', $.minifyHtml({
+            quotes: true,
+            empty: true,
+            spare: true
+        })))
+        // Output Files
+        .pipe(gulp.dest(DIST))
+        .pipe($.size({title: 'html'}));
+});
+
+// Vulcanize granular configuration
+gulp.task('vulcanize', function() {
+    var DEST_DIR = DIST + '/src';
+    return gulp.src(DEST_DIR + '/elements.html')
+        .pipe($.vulcanize({
+            stripComments: true,
+            inlineCss: true,
+            inlineScripts: true
+        }))
+        //.pipe($.minifyInline())
+        .pipe(gulp.dest(DEST_DIR))
+        .pipe($.size({title: 'vulcanize'}));
+});
+
+// Use index.jsp for dist marketplace package
+// gulp.task('dist:index', function () {
+//     del(DIST + '/index.html');
+//     gulp.src(DIST + '/index.jsp')
+//         .pipe($.rename('index.html'))
+//         .pipe($.minifyHtml({
+//             quotes: true,
+//             empty: true,
+//             spare: true
+//         }))
+//         .pipe(gulp.dest(DIST));
+//     del(DIST + '/index.jsp');
+// });
+
+// Delete all unnecessary bower dependencies
+// gulp.task('dist:bower', function (cb) {
+//     del([
+//         DIST + '/bower_components/**/*',
+//         '!' + DIST + '/bower_components/jquery',
+//         '!' + DIST + '/bower_components/jquery/dist',
+//         '!' + DIST + '/bower_components/jquery/dist/jquery.min.js',
+//         '!' + DIST + '/bower_components/webcomponentsjs',
+//         '!' + DIST + '/bower_components/webcomponentsjs/webcomponents-lite.min.js',
+//         '!' + DIST + '/bower_components/moment',
+//         '!' + DIST + '/bower_components/moment/min',
+//         '!' + DIST + '/bower_components/moment/min/moment.min.js',
+//         '!' + DIST + '/bower_components/select2',
+//         '!' + DIST + '/bower_components/select2/select2.min.js',
+//         '!' + DIST + '/bower_components/nuxeo-ui-elements',
+//         '!' + DIST + '/bower_components/nuxeo-ui-elements/viewers',
+//         '!' + DIST + '/bower_components/nuxeo-ui-elements/viewers/pdfjs',
+//         '!' + DIST + '/bower_components/nuxeo-ui-elements/viewers/pdfjs/**',
+//         '!' + DIST + '/bower_components/nuxeo-ui-elements/viewers/pdfjs/**/*',
+//     ], cb);
+// });
+
+// Generate a list of files that should be precached when serving from 'dist'.
+// The list will be consumed by the <platinum-sw-cache> element.
+// gulp.task('precache', function (callback) {
+//     var dir = DIST;
+//
+//     glob('{elements,scripts,styles}/**/*.*', {cwd: dir}, function(error, files) {
+//         if (error) {
+//             callback(error);
+//         } else {
+//             files.push('index.html', './', 'bower_components/webcomponentsjs/webcomponents-lite.min.js');
+//             var filePath = path.join(dir, 'precache.json');
+//             fs.writeFile(filePath, JSON.stringify(files), callback);
+//         }
+//     });
+// });
+
+// Clean Output Directory
+gulp.task('clean', del.bind(null, ['.tmp', DIST]));
+
+// Watch Files For Changes & Reload
+gulp.task('serve', ['styles', 'elements', 'images'], function () {
+    // setup our local proxy
+    //var proxyOptions = require('url').parse('http://10-124-24-169.cic.cvshealth.com:8080/nuxeo');
+    var proxyOptions = require('url').parse('http://localhost:8080/nuxeo');
+    proxyOptions.route = '/nuxeo';
+    browserSync({
+        notify: false,
+        logPrefix: 'PSK',
+        snippetOptions: {
+            rule: {
+                match: '<span id="browser-sync-binding"></span>',
+                fn: function (snippet) {
+                    return snippet;
+                }
+            }
+        },
+        // Run as an https by uncommenting 'https: true'
+        // Note: this uses an unsigned certificate which on first access
+        //       will present a certificate warning in the browser.
+        // https: true,
+        server: {
+            baseDir: ['.tmp', APP],
+            middleware: [ require('proxy-middleware')(proxyOptions) ],
+            routes: {
+                '/bower_components': 'bower_components'
+            }
+        }
+    });
+
+    gulp.watch([APP + '/**/*.html'], reload);
+    gulp.watch([APP + '/styles/**/*.css'], ['styles', reload]);
+    gulp.watch([APP + '/src/**/*.css'], ['elements', reload]);
+    gulp.watch([APP + '/{scripts,elements}/**/*.js'], ['jshint']);
+    gulp.watch([APP + '/images/**/*'], reload);
+});
+
+// Build Production Files, the Default Task
+gulp.task('default', ['clean'], function (cb) {
+    runSequence(
+        ['copy', 'styles'],
+        'elements',
+        ['images', 'fonts', 'html'],
+        'vulcanize',
+        cb);
+    // Note: add , 'precache' , after 'vulcanize', if your are going to use Service Worker
+});
+
+// Load custom tasks from the `tasks` directory
+try { require('require-dir')('tasks'); } catch (err) {}

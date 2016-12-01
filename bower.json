@@ -18,7 +18,6 @@
     "polymer": "Polymer/polymer#^1.6.0",
     "nuxeo-elements": "nuxeo/nuxeo-elements#^0.8.0",
     "paper-card": "PolymerElements/paper-card#^1.1.4",
-    "sc-timeago": "*",
     "paper-dialog": "PolymerElements/paper-dialog#^1.1.0",
     "paper-input": "PolymerElements/paper-input#^1.1.20",
     "neon-animation": "PolymerElements/neon-animation#^1.2.4",
