@@ -149,18 +149,18 @@ gulp.task('vulcanize', function() {
 });
 
 // Use index.jsp for dist marketplace package
-// gulp.task('dist:index', function () {
-//     del(DIST + '/index.html');
-//     gulp.src(DIST + '/index.jsp')
-//         .pipe($.rename('index.html'))
-//         .pipe($.minifyHtml({
-//             quotes: true,
-//             empty: true,
-//             spare: true
-//         }))
-//         .pipe(gulp.dest(DIST));
-//     del(DIST + '/index.jsp');
-// });
+gulp.task('dist:index', function () {
+    del(DIST + '/index.html');
+    gulp.src(DIST + '/index.jsp')
+        .pipe($.rename('index.html'))
+        .pipe($.minifyHtml({
+            quotes: true,
+            empty: true,
+            spare: true
+        }))
+        .pipe(gulp.dest(DIST));
+    del(DIST + '/index.jsp');
+});
 
 // Delete all unnecessary bower dependencies
 // gulp.task('dist:bower', function (cb) {
@@ -246,7 +246,7 @@ gulp.task('default', ['clean'], function (cb) {
         ['copy', 'styles'],
         'elements',
         ['images', 'fonts', 'html'],
-        'vulcanize',
+        'vulcanize', 'dist:index',
         cb);
     // Note: add , 'precache' , after 'vulcanize', if your are going to use Service Worker
 });

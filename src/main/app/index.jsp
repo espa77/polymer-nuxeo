@@ -82,7 +82,7 @@
       }
     </script>
 
-    <link rel="import" href="src/my-app.html">
+    <link rel="import" href="/src/my-app.html">
 
     <style>
       body {
@@ -97,7 +97,7 @@
   <body class="fullbleed layout" unresolved>
   <template is="dom-bind" id="app">
     <nuxeo-connection url="/nuxeo" username="Administrator" password="Administrator"></nuxeo-connection>
-    <my-app base-url="/"></my-app>
+    <my-app base-url="/nuxeo/polymerUI"></my-app>
   </template>
   </body>
 </html>

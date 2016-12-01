@@ -33,6 +33,7 @@
         background-color: var(--app-primary-color);
         color: #fff;
       }
+
       app-header paper-icon-button {
         --paper-icon-button-ink-color: white;
       }
@@ -40,6 +41,7 @@
       .drawer-list {
         margin: 0 20px;
       }
+
       .drawer-list a {
         display: block;
         padding: 0 16px;
@@ -47,10 +49,12 @@
         text-decoration: none;
         color: var(--app-secondary-color);
       }
+
       .drawer-list a.iron-selected {
         color: black;
         font-weight: bold;
       }
+
       .drawer-list a.subroute {
         padding-left: 32px;
       }
@@ -60,10 +64,10 @@
 
     <app-location route="{{route}}"></app-location>
     <app-route
-        route="{{route}}"
-        pattern="/:view"
-        data="{{routeData}}"
-        tail="{{subroute}}"></app-route>
+            route="{{route}}"
+            pattern="/:view"
+            data="{{routeData}}"
+            tail="{{subroute}}"></app-route>
 
 
     <app-drawer-layout fullbleed>
@@ -72,7 +76,7 @@
       <app-drawer>
         <app-toolbar>Access Menu</app-toolbar>
         <iron-selector selected="{{routeData.view}}" attr-for-selected="name" class="drawer-list" role="navigation">
-            <a name="root" href="/root">Back to Root Folder</a>
+          <a name="root" href="/root">Back to Root Folder</a>
         </iron-selector>
       </app-drawer>
 
@@ -86,10 +90,10 @@
           </app-toolbar>
         </app-header>
 
-          <iron-pages selected="[[routeData.view]]" attr-for-selected="name" fallback-selection="view404" role="main">
-              <my-root name="root" route="{{subroute}}"></my-root>
-              <my-view404 name="view404"></my-view404>
-          </iron-pages>
+        <iron-pages selected="[[routeData.view]]" attr-for-selected="name" fallback-selection="view404" role="main">
+          <my-root name="root" route="{{subroute}}"></my-root>
+          <my-view404 name="view404"></my-view404>
+        </iron-pages>
 
       </app-header-layout>
 
@@ -109,6 +113,11 @@
           type: String,
           reflectToAttribute: true,
           observer: '_pageChanged'
+        },
+
+        baseUrl: {
+          type: String,
+          value: "/"
         }
 
       },
@@ -117,17 +126,17 @@
         '_routePageChanged(routeData.view)'
       ],
 
-      _routePageChanged: function(page) {
+      _routePageChanged: function (page) {
         this.page = page || 'root';
       },
 
-      _pageChanged: function(page) {
+      _pageChanged: function (page) {
         // Load page import on demand. Show 404 page if fails
         var resolvedPageUrl = this.resolveUrl('my-' + page + '.html');
         this.importHref(resolvedPageUrl, null, this._showPage404, true);
       },
 
-      _showPage404: function() {
+      _showPage404: function () {
         this.page = 'view404';
       }
 
