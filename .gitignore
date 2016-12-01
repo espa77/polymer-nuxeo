@@ -3,5 +3,5 @@ node_modules
 target
 .DS_Store
 .idea
-/build/
-/gulpfile-old.js
+build
+gulpfile-old.js
